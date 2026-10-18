@@ -331,14 +331,18 @@
     {
       const m = next.mascot || {}, outfit = {};
       ['cabeza', 'cara', 'cuello', 'mano'].forEach(slot => { if (typeof m.outfit?.[slot] === 'string' && /^\w{1,20}$/.test(m.outfit[slot])) outfit[slot] = m.outfit[slot]; });
-      next.mascot = { name: String(m.name || '').trim().slice(0, 24) || 'Nexo', kind: ['matraz', 'atomo', 'slime'].includes(m.kind) ? m.kind : 'matraz', outfit };
+      const kind = ['matraz', 'atomo', 'slime'].includes(m.kind) ? m.kind : 'matraz';
+      // owned = mascotas que tienes: la inicial es gratis y para siempre; las otras se consiguen en la Tienda.
+      const owned = [...new Set([kind, ...(Array.isArray(m.owned) ? m.owned : []).filter(k => ['matraz', 'atomo', 'slime'].includes(k))])];
+      next.mascot = { name: String(m.name || '').trim().slice(0, 24) || 'Nexo', kind, owned, outfit };
     }
     // Tienda y cofres (docs/economia/SPEC.md): accesorios que tienes, polvo y cofres sin abrir.
     { next.shop = raw.shop; const s = window.NexoTienda.shopOf(next); s.owned = s.owned.filter(id => id in window.NexoTienda.RARITY_OF); }
     // Tutorial (docs/tutorial/SPEC.md): pending = lo verá solo; skipped/done = solo desde Ajustes. Datos viejos con progreso cuentan como ya vistos.
     {
       const tu = raw.tutorial && typeof raw.tutorial === 'object' ? raw.tutorial : null;
-      const hasProgress = (next.sessions?.length || 0) + (next.completedLessons?.length || 0) + Object.keys(next.practice || {}).length > 0;
+      // Una cuenta que ya eligió mascota (viaja en la nube) no repite el tutorial en otro dispositivo.
+      const hasProgress = (next.sessions?.length || 0) + (next.completedLessons?.length || 0) + Object.keys(next.practice || {}).length > 0 || !!raw.mascot?.kind;
       const sections = {}; ['clases', 'juegos', 'organizacion', 'perfil'].forEach(k => { if (tu?.sections?.[k]) sections[k] = true; });
       next.tutorial = tu && ['pending', 'skipped', 'done'].includes(tu.status) ? { status: tu.status, rewarded: !!tu.rewarded, sections, news: Math.max(0, Math.floor(Number(tu.news)) || 0) }
         : hasProgress ? { status: 'done', rewarded: true, sections: {}, news: 0 } : { status: 'pending', rewarded: false, sections: {}, news: 0 };
@@ -534,6 +538,15 @@
   }
   // La primera vez (cuenta nueva) el Inicio lleva al tutorial. Navegadores automatizados (pruebas) no lo ven.
   const tutorialDue = () => state.tutorial?.status === 'pending' && !navigator.webdriver;
+  // Pantalla de entrada (docs/cuentas/SPEC.md): con la nube activa y sin sesión, la primera vez ofrece Google o invitado antes del tutorial.
+  // Se espera a saber si hay sesión (cloudListo) para no mostrarla a quien ya entró.
+  const ENTRADA_KEY = 'nexo-entrada-vista';
+  let cloudListo = !cloud.enabled;
+  const marcarCloudListo = () => { if (cloudListo) return; cloudListo = true; if (['home', 'entrada'].includes(parseRoute()[0])) renderRoute(false); };
+  const entradaDue = () => {
+    if (!cloud.enabled || cloud.authenticated || navigator.webdriver) return false;
+    try { return !localStorage.getItem(ENTRADA_KEY); } catch (_) { return false; }
+  };
   // Avisos del Grimorio (dist/tutorial/avisos.js, carga perezosa): primera vez en cada sección si saltaste el tutorial, y novedades.
   const withAvisos = fn => {
     if (window.NexoAvisos) return fn(window.NexoAvisos);
@@ -586,7 +599,16 @@
     setActiveNav(route);
     closeMore();
     const renderers = {
-      home: () => (tutorialDue() ? routeTo('tutorial') : renderHome()),
+      home: () => (!cloudListo ? (app.innerHTML = '<section class="page"><p class="eyebrow">Abriendo la torre…</p></section>')
+        : entradaDue() ? routeTo('entrada') : tutorialDue() ? routeTo('tutorial') : renderHome()),
+      entrada: () => { // docs/cuentas/SPEC.md · se carga solo al abrirla
+        if (!cloudListo || !entradaDue()) return routeTo('home');
+        const go = () => { if (parseRoute()[0] === 'entrada') window.NexoEntrada.render(app, {
+          google: () => cloud.signInWithGoogle({ volver: 'home' }),
+          guest: () => { try { localStorage.setItem(ENTRADA_KEY, '1'); } catch (_) {} routeTo('home'); }
+        }); };
+        if (window.NexoEntrada) go(); else { const sc = document.createElement('script'); sc.src = 'cuentas/entrada.js?v=1'; sc.onload = go; document.head.append(sc); }
+      },
       learn: () => route[1] === 'course'
         ? (route[3] === 'lesson' ? (LESSONS[route[4]]?.subject===route[2] ? renderLesson(route[4]) : renderSubjects())
           : route[3] === 'concept' ? renderAcademicExplorer('knowledge',route[4])
@@ -623,7 +645,7 @@
         const mode = route[1] === 'test' ? 'test' : state.tutorial.status === 'pending' ? 'first' : 'replay';
         const REWARD = 150, api = {
           pet: () => ({ kind: state.mascot.kind, name: state.mascot.name }),
-          setPet: (kind, name) => { Object.assign(state.mascot, { kind, name }); saveState({ backup: false }); window.NexoPet?.renderDock?.(document.getElementById('companionPresence')); },
+          setPet: (kind, name) => { Object.assign(state.mascot, { kind, name, owned: [...new Set([kind, ...(state.mascot.owned || [])])] }); saveState({ backup: false }); window.NexoPet?.renderDock?.(document.getElementById('companionPresence')); },
           canReward: () => !cloud.authenticated && !state.tutorial.rewarded,
           reward: () => { if (cloud.authenticated || state.tutorial.rewarded) return 0; state.coins += REWARD; state.tutorial.rewarded = true; saveState(); updateChrome(); return REWARD; },
           reward_amount: REWARD,
@@ -1213,38 +1235,30 @@
     </nav>`);
   }
 
-  // Sin pestaña = solo la habitación; con pestaña, la sección se abre como panel sobre la escena (world/torre-mundo.js).
+  // Perfil = carta de jugador (perfil/carta.js). Sin sección = la carta y 3 botones; con sección, madera + pergamino con "← Mi carta".
+  function profileCardData() {
+    const pet = state.mascot, totalSec = state.sessions.reduce((sum, item) => sum + sessionSeconds(item), 0), run = streak();
+    const engine = window.NexoAcademicEngine, ranks = window.NexoArcaneRanks;
+    let level = 0;
+    try { if (engine && ranks) level = Math.max(0, ...engine.model.concepts.map(c => ranks.forState(state, c.id, engine.model).level)); } catch (_) { level = 0; }
+    return {
+      name: pet.name && pet.name !== 'Nexo' ? pet.name : (window.NexoPet?.names?.[pet.kind] || 'Nexo'),
+      rank: { level, name: ranks?.ranks[level]?.name || 'Sin rango' }, streak: run, minutes: Math.round(totalSec / 60),
+      badges: [run >= 3, run >= 7, totalSec >= 36000, Object.values(state.mastery).some(m => m?.status === 'dominado'),
+        state.claimedChallenges.length > 0, Object.values(pet.outfit || {}).some(Boolean)]
+    };
+  }
   function renderProfile(tab = '') {
     const active = ['mascot', 'grades', 'absences', 'stats', 'settings'].includes(tab) ? tab : '';
+    if (!active) { petBind(); return window.NexoCarta.render(app, profileCardData()); }
     if (active === 'stats') renderStats();
     else if (active === 'grades') renderProfileGrades();
     else if (active === 'absences') renderProfileAbsences();
     else if (active === 'settings') renderSettings();
-    else if (active === 'mascot') renderMascot();
-    else app.innerHTML = '<section class="page"></section>';
+    else renderMascot();
     const page = app.querySelector('.page');
     page.classList.add('rpg-inner', 'profile-page');
-    const tabs = `<nav class="rpg-tabs" role="tablist" aria-label="Perfil">
-      ${[['mascot','Mascota'],['stats','Estadísticas'],['settings','Ajustes']].map(([id,label]) => `<button role="tab" aria-selected="${active === id}" class="${active === id ? 'active' : ''}" data-profile-tab="${id}">${label}</button>`).join('')}
-    </nav>`;
-    if (active) {
-      const panel = document.createElement('div');
-      panel.className = 'profile-panel';
-      panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-label', 'Perfil');
-      panel.append(...page.childNodes);
-      panel.insertAdjacentHTML('afterbegin', `<button class="profile-close" data-profile-close aria-label="Cerrar">×</button>${tabs}`);
-      page.append(panel);
-      page.insertAdjacentHTML('beforeend', '<button class="profile-backdrop" data-profile-close tabindex="-1" aria-label="Cerrar"></button>');
-    }
-    else page.insertAdjacentHTML('beforeend', `<nav class="profile-shortcuts" aria-label="Objetos de la habitación">
-      ${[['mascot','Espejo','Mascota y vestuario'],['stats','Escritorio y vitrina','Estadísticas y rangos'],['settings','Baúl','Ajustes']].map(([id,name,hint]) => `<button data-profile-tab="${id}"><strong>${name}</strong><small>${hint}</small></button>`).join('')}
-    </nav>`);
-    page.insertAdjacentHTML('afterbegin', '<div class="profile-room-header" role="img" aria-label="Habitación de Nexo"></div>');
-  }
-
-  function profileSubjectTabs(selected, attribute, countFor = null) {
-    return `<nav class="profile-subject-tabs" role="tablist" aria-label="Ramo">${SUBJECTS.map(subject => `<button role="tab" aria-selected="${subject.id === selected}" class="${subject.id === selected ? 'active' : ''}" data-${attribute}="${subject.id}"><span>${esc(subject.name)}</span>${countFor ? `<b>${countFor(subject.id)}</b>` : ''}</button>`).join('')}</nav>`;
+    window.NexoCarta.wrapSection(page, active);
   }
 
   function renderProfileGrades() {
@@ -1450,7 +1464,7 @@
   }
   function renderMascot() {
     petBind();
-    app.innerHTML=`<section class="page"><p class="eyebrow">TU COMPAÑERO</p><h2>Mascota</h2>
+    app.innerHTML=`<section class="page"><p class="eyebrow">TU COMPAÑERO</p><h2>Vestuario</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
         <div class="panel"><h3>Elige tu compañero</h3><div id="petPick" style="display:flex;gap:10px;flex-wrap:wrap"></div>
           <p><label>Nombre <input id="petName" maxlength="20" autocomplete="off"></label></p>
@@ -1938,7 +1952,7 @@
 
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && modalRoot.innerHTML) return closeModal();
-    if (event.key === 'Escape' && app.querySelector('.profile-panel')) return routeTo('profile');
+    if (event.key === 'Escape' && app.querySelector('.perfil-seccion')) return routeTo('profile');
     const tabs = event.target.closest('[role="tablist"]');
     if (tabs && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
       const list = [...tabs.querySelectorAll('[role="tab"]:not([disabled])')], index = list.indexOf(event.target); if (index < 0) return;
@@ -2046,10 +2060,12 @@
     getCurrent: () => state,
     onState(next,{cached}={}) {
       state=normalizeState(next); updateChrome(); renderRoute(false);
-      if (!cached && cloud.authenticated && sessionStorage.getItem('nexo-google-return')) {
+      const volver = sessionStorage.getItem('nexo-google-return');
+      if (!cached && cloud.authenticated && volver) {
         sessionStorage.removeItem('nexo-google-return');
-        routeTo('profile','settings');
+        routeTo(...volver.split('/'));
       }
+      marcarCloudListo();
       let claim=null;
       try { claim=JSON.parse(localStorage.getItem('nexo-claim-after-auth-v13')||'null'); } catch (_) {}
       if (!cached && cloud.claimMatches(claim)
@@ -2062,7 +2078,7 @@
       }
       cloud.analyticsConsent(Boolean(state.settings.analytics));
     },
-    onGuest() { state=loadState(); cloud.analyticsConsent(Boolean(state.settings.analytics)); updateChrome(); renderRoute(false); },
+    onGuest() { state=loadState(); cloud.analyticsConsent(Boolean(state.settings.analytics)); updateChrome(); renderRoute(false); marcarCloudListo(); },
     onStatus(info) {
       const node=document.querySelector('#syncStatus');
       if (node) node.textContent=info.status==='synced'?'✓ Sincronizado':
@@ -2071,6 +2087,7 @@
         info.status==='failed'?'⚠ Pendiente de conexión':
         info.status==='pending'?'☁ Guardado localmente · pendiente':'En este dispositivo';
     }
-  }).catch(()=>{});
+  }).catch(()=>{}).finally(marcarCloudListo);
+  setTimeout(marcarCloudListo, 4000); // sin red o con la nube lenta, no dejar la puerta cerrada
   cloud.track('app_opened');
 })();

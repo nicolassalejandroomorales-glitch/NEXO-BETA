@@ -1,4 +1,4 @@
-/* Mundo de la torre (docs/mundo-torre/SPEC.md): escena pixel recorrible arriba de Entrenar, Juegos y Perfil. */
+/* Mundo de la torre (docs/mundo-torre/SPEC.md): escena pixel recorrible arriba de Entrenar y Juegos. */
 /* Igual que el refugio del Inicio: el arte es parte de la página (de borde a borde, sin marco). Ancho, alto y márgenes los pone el JS. */
 .torre-scene {
   position: relative; display: flex; justify-content: center; height: 420px; margin-bottom: 8px;
@@ -41,31 +41,6 @@
 
 /* La escena reemplaza las cabeceras con imagen de antes. */
 .arcane-training.torre-on .torre-title h1 { min-height: 0; padding: 0; border: 0; background: none; box-shadow: none; display: block; }
-.profile-page.torre-on .profile-room-header { display: none; }
-
-/* Perfil: cada objeto abre su sección como panel sobre la habitación (se cierra con × , Esc o tocando afuera). */
-.profile-page.torre-on .profile-backdrop {
-  position: fixed; inset: 0; z-index: 80; border: 0; border-radius: 0; background: rgb(12 8 8 / .55); cursor: default;
-}
-.profile-page.torre-on .profile-panel {
-  position: fixed; z-index: 81; left: 50%; top: 50%; transform: translate(-50%, -50%); box-sizing: border-box;
-  width: min(900px, calc(100vw - 32px)); max-height: min(82vh, 760px); overflow: auto; padding: 18px;
-  background: #121a1a; border: 2px solid #9b7751; border-radius: 14px; box-shadow: 0 18px 60px rgb(0 0 0 / .6);
-  animation: profile-panel-in .22s ease-out;
-}
-.profile-page.torre-on .profile-panel > .rpg-tabs { margin: 0 44px 12px 0; background: none; position: static; }
-.profile-close {
-  position: absolute; top: 10px; right: 10px; z-index: 1; width: 34px; height: 34px; padding: 0; font-size: 1.4rem; line-height: 1;
-  color: #fff0c4; background: rgb(20 12 16 / .9); border: 1px solid #e2b850; border-radius: 8px;
-}
-@keyframes profile-panel-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
-
-/* Atajos bajo la escena (en celular los objetos quedan fuera de cuadro). */
-.profile-shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 6px 16px 24px; }
-.profile-shortcuts button {
-  display: grid; gap: 2px; padding: 12px 14px; text-align: left; color: #fff0c4; background: #121a1a; border: 1px solid #9b7751; border-radius: 10px;
-}
-.profile-shortcuts small { color: #cdbf9d; }
 
 /* Cuando un objeto elige algo, el formulario o la tarjeta brillan un momento. */
 .torre-flash { animation: torre-flash 1.3s ease-out; }
@@ -78,11 +53,7 @@
 .game-placeholder.game-ready p { color: #fbe08a; font-weight: 700; }
 
 @media (max-width: 700px) {
-  .profile-page.torre-on .profile-panel {
-    top: auto; bottom: 0; left: 0; width: 100vw; max-height: 86vh; transform: none; border-radius: 14px 14px 0 0; border-width: 2px 0 0;
-    animation: none;
-  }
   .torre-hint { font-size: .68rem; left: 8px; bottom: 8px; }
   .torre-title { right: 70px; }
 }
-@media (prefers-reduced-motion: reduce) { .torre-flash { animation: none; outline: 2px solid #e2b850; } .profile-panel { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .torre-flash { animation: none; outline: 2px solid #e2b850; } }
