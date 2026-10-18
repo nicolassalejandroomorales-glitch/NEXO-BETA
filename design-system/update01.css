@@ -1,0 +1,695 @@
+/* UPDATE 01 — scoped physical surfaces; legacy rooms keep their own treatment. */
+.refuge-page { max-width:1200px; padding-top:10px; }
+.refuge { position:relative; isolation:isolate; overflow:hidden; padding:clamp(18px,3vw,38px); border:6px solid #4d3324; border-radius:48px 48px 8px 8px; background:#302016; box-shadow:inset 0 0 0 2px #af8353,0 24px 60px #080c0c88; }
+.refuge::before { content:"";position:absolute;z-index:-2;inset:0;background:linear-gradient(180deg,transparent 35%,#32221788 70%,#302016 100%),var(--room-art) 27% top / auto 800px no-repeat;transition:opacity 2s; }
+.refuge::after { content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#1d25162b,transparent 45%,#161b2529);pointer-events:none; }
+.refuge-light { position:absolute;z-index:-1;inset:0;pointer-events:none;background:linear-gradient(125deg,#fff1ba26,transparent 45%); }
+
+.refuge .streak-hud { padding:7px 12px;font-size:.72rem;background:#27362be8;border-color:#c4ac72; }
+
+.paper-link { min-height:44px;background:none;border:0;border-bottom:1px solid #89654055;border-radius:0;padding:8px 0;color:#335342;text-align:left;font:700 .8rem/1.5 var(--font-ui);cursor:pointer; }
+.paper-link:hover { color:#1b3428;background:#73582912; }
+.wood-link { min-height:44px;background:none;border:0;padding:10px 0;color:#f6deb0;font:600 .8rem/1.5 var(--font-ui);text-align:left;cursor:pointer; }
+.wood-link:hover { text-decoration:underline; }
+
+.refuge-caption { text-align:center;color:#d8c597;font:.8rem/1.5 var(--font-title);padding:23px 0 0; }
+/* Time affects scenery and its lighting, never the reading surfaces. */
+body[data-nexo-time="day"] .refuge-light,body[data-nexo-time="morning"] .refuge-light { background:linear-gradient(125deg,#fff4bc44,transparent 55%); }
+body[data-nexo-time="dusk"] .refuge::after { background:linear-gradient(120deg,#d991443b,#572e212b); }
+body[data-nexo-time="dusk"] .refuge-light { background:radial-gradient(ellipse at 18% 20%,#ffbe5755,transparent 65%); }
+body[data-nexo-time="night"] .refuge::after { background:linear-gradient(115deg,#0d172bb0,#13182299 48%,#1c182277); }
+body[data-nexo-time="night"] .refuge-light { z-index:0;background:radial-gradient(ellipse at 33% 32%,#ffd38533,transparent 28%),radial-gradient(ellipse at 93% 35%,#ffb44d33,transparent 28%); }
+.refuge-caption { position:relative;z-index:1; }
+
+@media(max-width:700px) {
+  .refuge-page { width:calc(100% - 16px); }
+  .refuge { padding:16px;border-width:4px;border-radius:40px 40px 6px 6px; }
+  .refuge::before { background-size:auto 680px;background-position:21% top; }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+}
+@media(prefers-reduced-motion:reduce) { .refuge::before { transition:none; } }
+/* The same room, now seen across an open, leather-bound book. */
+.grimoire-scene { max-width:1200px;position:relative;padding-top:0; }
+.grimoire-scene::before { content:"";position:absolute;z-index:-1;inset:0 -12px;background:linear-gradient(180deg,#21191122,#241a13 70%),var(--room-art) center top / 100% auto no-repeat;border-radius:30px 30px 0 0; }
+.grimoire-wayfinding { display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;padding:12px 22px 62px; }
+.grimoire-wayfinding .wood-link { color:#ffebc8;text-shadow:0 1px 4px #22180f; }
+.grimoire { position:relative;margin:0 12px;padding:11px 13px 15px;border:2px solid #a07b46;border-radius:13px 20px 20px 13px;background:repeating-linear-gradient(0deg,#4b3021,#4b3021 3px,#523625 3px,#523625 5px);box-shadow:0 7px 0 #dcc394,0 10px 0 #795635,0 25px 50px #0a0e0bb3;perspective:1200px; }
+.grimoire::before,.grimoire::after { content:"✧";position:absolute;z-index:2;color:#cfac64;font-size:1.5rem;top:12px;pointer-events:none; }
+.grimoire::before { left:17px; }.grimoire::after { right:17px; }
+.grimoire-tabs { position:absolute;z-index:3;top:-32px;left:30px;right:22px;display:flex;gap:8px; }
+.grimoire-tab { display:flex;align-items:center;justify-content:center;gap:6px;min-height:45px;min-width:66px;padding:8px 14px 12px;border:1px solid #c5a163;border-radius:5px 5px 0 0;background:#42523d;color:#fff0cc;box-shadow:2px 1px 0 #171b1688;cursor:pointer;font-size:.75rem; }
+.grimoire-tab.active { background:#7d4730;transform:translateY(-6px);border-bottom:4px solid #e5c995; }
+.grimoire-tab:hover { background:#5f694b; }
+.grimoire-spread { position:relative;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);color:#382c20;border:1px solid #b38b52;border-radius:9px 12px 12px 9px;background:#ead5ad;min-height:660px; }
+.grimoire-frontispiece,.grimoire-folio { position:relative;min-width:0;padding:clamp(23px,3.1vw,44px);background:radial-gradient(ellipse at 50% 20%,#fff7d78c,transparent 70%),repeating-linear-gradient(2deg,#a4734210 0 1px,transparent 1px 6px),#ead5ad; }
+.grimoire-frontispiece { border-radius:7px 0 0 7px;background:linear-gradient(90deg,#ad824523,transparent 14%,transparent 82%,#5e3d3333),radial-gradient(ellipse at 50% 20%,#fff4d08c,transparent 65%),#e8d0a3;text-align:center; }
+.grimoire-folio { border-radius:0 9px 9px 0;background:linear-gradient(90deg,#67422b33,transparent 8%,transparent 95%,#ac7a3b44),radial-gradient(ellipse at 70% 15%,#fff5d88c,transparent 65%),#f0dcb6; }
+.grimoire-spread::after { content:"";position:absolute;top:0;bottom:0;left:40%;width:2px;background:#7c593944;box-shadow:0 0 12px 3px #734b2d26;pointer-events:none; }
+.grimoire .eyebrow { font-size:.65rem;color:#75553a;letter-spacing:.14em;margin:0 0 12px; }
+.grimoire h1 { font-size:clamp(1.55rem,2.5vw,2.55rem);color:#3c2c20;margin:0 0 12px;line-height:1.15;overflow-wrap:anywhere; }
+.grimoire h2 { color:#3c2c20; }
+.grimoire-crest { width:112px;height:112px;margin:30px auto;border:1px solid #92723f;border-radius:50%;display:grid;place-items:center;color:#7a5931;font:3.4rem/1 var(--font-title);outline:1px dashed #a6854d;outline-offset:7px;position:relative; }
+.grimoire-crest::after { content:"✧";position:absolute;inset:auto -18px 0 auto;font-size:1.4rem;background:#e8d0a3; }
+.grimoire-frontispiece h2 { margin:34px 0 16px;font:700 clamp(1.6rem,2.6vw,2.4rem)/1.2 var(--font-title); }
+.grimoire-frontispiece>p:not(.eyebrow) { font:1rem/1.8 var(--font-title);color:#5a4931; }
+.grimoire-margin-note { margin:35px 0;padding:22px 5px;border-top:1px solid #9a7e4f77;border-bottom:1px solid #9a7e4f77;font:italic 1rem/1.8 var(--font-title);color:#645034; }
+.folio-mark { display:block;color:#85683c;font-size:2rem;margin-top:35px; }
+.folio-intro { color:#5d4b34;font:.87rem/1.7 var(--font-ui);margin:0 0 22px; }
+.folio-footer { margin-top:28px;padding-top:16px;border-top:1px solid #a38a5b77;text-align:center;font:.62rem/1.5 var(--font-ui);letter-spacing:.13em;color:#785b36; }
+.grimoire-index { display:grid; }
+body[data-nexo-room="learn"] .grimoire .grimoire-index-entry { display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;min-width:0;width:100%;padding:23px 0;text-align:left;border:0;border-top:1px solid #9e794977;border-radius:0;background:none;box-shadow:none;color:#3c2f20;cursor:pointer;transform:none; }
+.grimoire-index-entry:hover { background:#684a2c0c!important; }
+.grimoire-index-entry h2 { font-size:1.3rem;margin:0 0 9px; }
+body[data-nexo-room="learn"] .grimoire-index-entry p { color:#574633;font-size:.8rem;line-height:1.6;margin:0 0 9px; }
+.grimoire-index-entry small { color:#5f593c;font-size:.72rem;line-height:1.55;display:block; }
+.index-symbol { font:1.9rem/1 var(--font-title);color:#89623c; }
+.grimoire-evaluations { display:grid;gap:0; }
+.evaluation-chapter { padding:19px 0;text-align:left;border:0;border-top:1px solid #9e794977;background:none;color:#3c2f20;cursor:pointer; }
+.evaluation-chapter:hover { background:#684a2c0c; }
+.chapter-label { display:block;color:#735635;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;margin-bottom:9px; }
+.evaluation-chapter h2 { font-size:1.35rem;margin:0 0 10px; }
+.evaluation-date { display:block;font-size:.76rem;line-height:1.6;color:#654d31;margin:8px 0; }
+.evaluation-date small { display:block;color:#714731;line-height:1.6;margin-top:4px; }
+.chapter-summary { display:block;font-size:.75rem;line-height:1.6;color:#36583f;margin-top:10px; }
+.ink-link { min-height:44px;padding:10px 0;border:0;border-bottom:1px solid #a0805266;background:none;color:#34543a;text-align:left;font:700 .8rem/1.6 var(--font-ui);cursor:pointer; }
+.ink-link:hover { color:#182e20;background:#81683e12; }
+.ink-link:disabled { opacity:.8;cursor:default;color:#68543a; }
+.map-record { display:grid;gap:9px;padding:22px 0;margin:24px 0;border-top:1px solid #94724677;border-bottom:1px solid #94724677;text-align:left; }
+.map-record strong { font:2.2rem/1.1 var(--font-title);color:#4a5c37; }
+.map-record span { font-size:.8rem;color:#514530; }
+.map-record p { margin:0;font-size:.74rem;color:#655234;line-height:1.65; }
+.preparation-map { position:relative;min-height:var(--map-height);margin-top:15px; }
+.preparation-path { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
+.preparation-path path { fill:none;stroke:#a38350;stroke-width:2;stroke-dasharray:5 4;vector-effect:non-scaling-stroke; }
+.map-compass { position:absolute;right:0;top:4px;color:#8e6f41;display:grid;text-align:center;font-size:2.7rem; }
+.map-compass small { font-size:.65rem; }
+.preparation-stops { list-style:none;margin:0;padding:20px 0;position:relative; }
+.preparation-stop { min-height:140px;position:relative;display:flex;align-items:center; }
+.preparation-node { position:relative;left:var(--map-x);transform:translateX(-50%);width:170px;max-width:50%;display:grid;justify-items:center;gap:8px;padding:8px 0;background:none;border:0;border-radius:0;text-align:center;color:#382c1e;cursor:pointer; }
+.map-node-seal { width:43px;height:43px;display:grid;place-items:center;border:2px solid #846744;border-radius:50%;background:#efdeb9;box-shadow:0 0 0 5px #efdcb677;font:700 1rem/1 var(--font-title); }
+.preparation-node.recorded .map-node-seal { background:#456144;color:#fff5dd;border-color:#b8c098; }
+.preparation-node[aria-current="step"] .map-node-seal { outline:3px solid #8b4f2f;outline-offset:5px; }
+.map-node-label { display:grid;gap:5px;padding:5px;background:#efddbce8;border-radius:4px; }
+.map-node-label b { font:700 .82rem/1.45 var(--font-ui); }
+.map-node-label small { font-size:.67rem;color:#635038;line-height:1.4; }
+.preparation-node:hover .map-node-seal { background:#e2c389; }
+.map-destination { position:absolute;bottom:0;left:50%;color:#735936;font-size:1.6rem; }
+.map-legend { color:#625337;font:.7rem/1.6 var(--font-ui); }
+.preparation-detail { text-align:left;scroll-margin-top:85px;padding:22px 0;border-top:1px solid #94724677; }
+.preparation-detail h2 { font-size:1.4rem;margin:0 0 13px; }
+.preparation-detail p { font-size:.85rem;line-height:1.8;color:#534731; }
+.preparation-detail .legacy-note { font-size:.74rem;border-left:3px solid #a98049;padding-left:12px; }
+.preparation-empty { text-align:center;padding:40px 0; }
+.preparation-empty>span { font-size:3rem;color:#7f653b; }.preparation-empty p { font-size:.85rem;line-height:1.7; }
+@media(max-width:1100px) { .grimoire-frontispiece,.grimoire-folio { padding:26px; } }
+@media(max-width:700px) {
+  .grimoire-scene { width:calc(100% - 18px); }
+  .grimoire-wayfinding { padding:4px 8px 72px;gap:0 13px; }
+  .grimoire-wayfinding .wood-link { font-size:.75rem; }
+  .grimoire { margin:0 2px;padding:7px;border-width:1px;border-radius:8px; }
+  .grimoire-tabs { top:-34px;left:10px;right:7px;gap:5px; }
+  .grimoire-tab { min-width:0;flex:1;padding:8px 7px 12px;gap:5px;min-height:44px; }
+  .grimoire-spread { display:flex;flex-direction:column;min-height:0; }
+  .grimoire-spread::after { display:none; }
+  .grimoire-folio { order:1;padding:27px 21px 23px;border-radius:6px 6px 0 0; }
+  .grimoire-frontispiece { order:2;padding:0 21px 25px;text-align:left;border-radius:0 0 6px 6px;background:#ead5ad; }
+  .grimoire-frontispiece>.eyebrow,.grimoire-crest,.grimoire-frontispiece>h2,.grimoire-frontispiece>p:not(.grimoire-margin-note),.folio-mark { display:none; }
+  .grimoire-margin-note { margin:0;padding:19px 0;font-size:.9rem; }
+  .map-record { margin:0;padding-top:20px; }
+  .map-record strong { font-size:1.65rem; }
+  .grimoire-index-entry { gap:12px!important; }
+  .grimoire-index-entry h2 { font-size:1.2rem; }
+  .index-symbol { font-size:1.6rem; }
+  .preparation-node { width:130px; }
+  .map-node-label b { font-size:.75rem; }
+}
+.grimoire-opening-leaf { position:absolute;z-index:5;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;pointer-events:none;transform-origin:left center;backface-visibility:hidden;border:8px solid #735331;border-radius:8px 15px 15px 8px;background:radial-gradient(ellipse at 50% 50%,#476148,#293e32);box-shadow:inset 0 0 0 2px #b99658;color:#f4dfac; }
+.grimoire-opening-leaf>span { font-size:5rem; }.grimoire-opening-leaf b { font:700 2.3rem/1 var(--font-title);letter-spacing:.18em; }.grimoire-opening-leaf small { letter-spacing:.24em;font-size:.7rem; }
+#app[data-world-transition="book-first"]>.page,#app[data-world-transition="book-return"]>.page,#app[data-world-transition="book-close"]>.page,#app[data-world-transition="page-turn"]>.page { animation:none; }
+body[data-nexo-ambient-motion="reduced"] .refuge::before { transition:none; }
+.refuge *, .grimoire * { overflow-wrap:break-word; }
+body[data-nexo-time="day"] .refuge::after { background:linear-gradient(115deg,#e6b56722,transparent 65%); }
+body[data-nexo-time="day"] .refuge-light { background:linear-gradient(125deg,#f3c37533,transparent 55%); }
+body:is([data-nexo-room="home"],[data-nexo-room="learn"]) .top-bar { background:linear-gradient(90deg,#29291ff5,#243128f5);border-right-color:#a3844b66; }
+body:is([data-nexo-room="home"],[data-nexo-room="learn"]) .nav-btn.active { background:#c6a25a19;border-color:#b89a6177;box-shadow:inset 3px 0 #cfb071;color:#fff0d1; }
+body:is([data-nexo-room="home"],[data-nexo-room="learn"]) .mobile-nav { background:#253026f5;border-color:#ac955e; }
+
+/* UPDATE 01.1 A+B — one continuous room; all motion stays behind readable surfaces. */
+.refuge-page { max-width:1320px;padding-top:0; }
+.refuge { container-type:inline-size;--refuge-companion-size:174px;border:0;border-radius:8px;padding:32px 40px 24px;background:#2c241c;box-shadow:0 24px 60px #080c0c55; }
+.refuge::before { background:linear-gradient(180deg,#1b211518,#271c1740),var(--room-art) 28% top / cover no-repeat; }
+.refuge::after { z-index:0;box-shadow:inset 0 0 75px 12px #171c1466; }
+.refuge-foliage { position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--room-art) 28% top / cover no-repeat;mask-image:linear-gradient(#000 0%,#000b 13%,transparent 28%);transform-origin:20% 0;animation:refugeLeaves 8s ease-in-out infinite alternate; }
+.refuge-light { z-index:0!important;animation:refugeSun 11s ease-in-out infinite alternate; }
+@keyframes refugeLeaves { from { transform:rotate(-.16deg) translateY(0); } to { transform:rotate(.16deg) translateY(2px); } }
+@keyframes refugeSun { from { opacity:.48; } to { opacity:1; } }
+
+.refuge .stage-companion .avatar-shadow-v10 { opacity:.65; }
+.refuge .stage-companion { position:relative; }
+
+.refuge-caption { text-shadow:0 2px 6px #080b08;font-size:.875rem;color:#fff0ce; }
+.refuge .eyebrow { font-size:.75rem; }
+.refuge :is(.paper-link,.wood-link,.evaluation-note>div,.evaluation-note small,.day-agenda small,.streak-hud) { font-size:.875rem; }
+
+.book-passage { position:fixed;z-index:40;pointer-events:none;perspective:1800px;transform-origin:top left;filter:drop-shadow(0 22px 24px #08100899); }
+.book-passage-pages { position:absolute;inset:0;border:9px solid #553922;border-radius:9px;background:linear-gradient(90deg,#ead1a1,#f6e4bd 48%,#725133 50%,#f6e4bd 53%,#e4c899);box-shadow:0 5px #d3bb8e,0 9px #553922;display:grid;place-items:center;color:#987346;font-size:3rem; }
+.book-passage-cover { position:absolute;inset:0 0 0 50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:24px;border:8px solid #69482c;border-radius:0 14px 14px 0;background:radial-gradient(ellipse at 30% 20%,#476349,#25392e);box-shadow:inset 0 0 0 2px #bea16c,inset 0 0 0 15px #253c3155;transform-origin:left center;backface-visibility:hidden;color:#f5e1b1;text-align:center;padding:20px; }
+.book-passage-cover>span { font:4.5rem var(--font-title);border:1px solid #c6a86c;border-radius:50%;padding:12px 24px; }
+.book-passage-cover>b { font:700 clamp(1.4rem,3vw,2.8rem) var(--font-title);letter-spacing:.18em; }
+.book-passage-cover>small { font-size:.875rem;line-height:1.7;letter-spacing:.14em; }
+.page-turn-leaf.grimoire-folio { position:absolute;z-index:6;inset:14px 17px 100px 46.5%;overflow:hidden;pointer-events:none;transform-origin:left center;backface-visibility:hidden;border-right:1px solid #b29565;box-shadow:-9px 0 23px #4e301e33; }
+body[data-nexo-room="home"] .ambient-particles { z-index:2; }
+body[data-nexo-room="home"] .ambient-prop { display:none; }
+body.ambient-paused :is(.refuge-light,.refuge-foliage) { animation-play-state:paused; }
+body[data-nexo-ambient-motion="reduced"] :is(.refuge-light,.refuge-foliage),body[data-nexo-quality="low"] :is(.refuge-light,.refuge-foliage) { animation:none; }
+@media(prefers-reduced-motion:reduce) { .refuge-light,.refuge-foliage { animation:none; } }
+@media(max-width:1100px) { .refuge { padding:24px; } }
+@media(max-width:700px) {
+  .refuge-page { width:100%; }.refuge { --refuge-companion-size:130px;padding:18px 18px 26px;border:0;border-radius:0; }
+  .refuge::before,.refuge-foliage { background-position:24% top;background-size:cover; }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  .book-passage-cover { gap:15px;padding:8px;border-width:4px; }
+  .book-passage-cover>small { font-size:.75rem;letter-spacing:.02em; }
+  .book-passage-cover>span { font-size:2.5rem;padding:8px 12px; }
+}
+
+/* C+D — bound folios, individual course openings, diagrams from the existing catalogue. */
+.grimoire-scene { max-width:1240px;padding-bottom:30px; }
+.grimoire-scene::before { inset:0;border-radius:8px;background:linear-gradient(#17221722,#221b1577),var(--room-art) center / cover no-repeat; }
+.grimoire { container-type:inline-size;padding:14px 17px 12px;border:3px solid #82572e;box-shadow:0 3px #cca772,0 6px #ecd6a8,0 9px #be9c68,0 12px #4a3020,0 28px 44px #080d0bb3; }
+.grimoire::before,.grimoire::after { color:#907044;top:25px;font-size:1.75rem; }
+.grimoire-spread { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);min-height:710px; }
+.grimoire-spread::after { left:46.5%;width:7px;background:linear-gradient(90deg,#88603b33,#63412755,#d1ad7955);box-shadow:0 0 16px 3px #54371e26; }
+.book-spine { position:absolute;z-index:0;inset:12px 50% 90px 46%;border-radius:40%;background:#392b20; }
+.grimoire-frontispiece,.grimoire-folio { padding:38px 38px 25px; }
+.grimoire-frontispiece { background:linear-gradient(90deg,#ad82452b,transparent 10%,transparent 82%,#77573540),radial-gradient(ellipse at 45% 35%,#fff5d696,transparent 70%),#e9d4ac; }
+.grimoire-folio { background:linear-gradient(90deg,#67422b26,transparent 8%,transparent 95%,#ac7a3b44),radial-gradient(ellipse at 70% 15%,#fff5d8ad,transparent 65%),#f0ddb8; }
+.grimoire :is(h1,h2) { overflow-wrap:normal; }
+.grimoire h1 { font-size:clamp(1.8rem,2.4vw,2.5rem); }
+.grimoire .eyebrow { font-size:.75rem; }
+.grimoire-crest { width:82px;height:82px;font-size:2.8rem;margin:24px auto;outline-offset:6px;border-color:var(--book-accent);color:var(--book-accent); }
+.grimoire-frontispiece h2 { margin:25px 0 15px;font-size:clamp(1.8rem,2.2vw,2.35rem); }
+.grimoire-frontispiece>p:not(.eyebrow) { line-height:1.65; }
+.folio-intro { font-size:1rem;line-height:1.6; }
+.folio-footer { font-size:.75rem;margin-top:22px; }
+.grimoire-tabs { left:28px;gap:12px; }
+.grimoire-tab { font-size:.875rem;background:#354b3b;border-width:1px 1px 3px;border-bottom-color:#d2b780;border-radius:3px 3px 0 0;box-shadow:2px 4px 5px #17221744; }
+.grimoire-tab.active { background:var(--book-accent);border-color:#b79462;color:#fff4da; }
+.grimoire-tab:is(:hover,:focus-visible) { transform:translateY(-4px); }
+.grimoire .ink-link { font-size:1rem;color:#314f36;min-height:48px; }
+.grimoire :is(.ink-link,.evaluation-chapter,.grimoire-tab):focus-visible { outline:3px solid #31593d;outline-offset:3px; }
+.grimoire-margin-note { margin:26px 0;padding:17px 5px; }
+.book-colophon { margin:35px 0 0;text-align:left;font-size:1rem;border-top:1px solid #a2885e;border-bottom:1px solid #a2885e;padding:14px 0; }
+.book-colophon>div { display:flex;justify-content:space-between;gap:18px;padding:10px 0; }
+.book-colophon dd { margin:0;font:700 1.25rem var(--font-title);color:#38573c; }
+.course-opening-number { font-size:.75rem;letter-spacing:.13em;color:#855834;margin:4px 0 13px; }
+.course-opening-title { font:700 2.1rem/1.2 var(--font-title);margin:0 0 12px;color:#643f2b!important; }
+.course-opening-description { font:1rem/1.7 var(--font-title);color:#59452d; }
+body[data-nexo-room="learn"] .grimoire .grimoire-index-entry { display:block;padding:17px 0;font-size:1rem;font-weight:700;color:#314f36;border-bottom:1px solid #a2885e; }
+.course-registration,.book-reading-note { color:#5f5037;font-size:.875rem;line-height:1.6; }
+.book-reading-note { font-style:italic;margin:23px 0 0; }
+.course-plate { margin:25px 0;padding:16px 0 18px;border-block:1px solid #a68a5b88;text-align:left; }
+.course-plate figcaption { display:grid;gap:7px;color:var(--book-accent,#885c3a);font-family:var(--font-title);font-size:1.15rem; }
+.course-plate figcaption>span { font:.75rem var(--font-ui);letter-spacing:.1em;color:#77583c; }
+.course-plate-diagram { margin-top:19px;color:#4e432f; }
+.course-plate-diagram :is(.electron-map,.process-visual,.qk-visual,.causal-visual) { display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;background:none;border:0;box-shadow:none;padding:6px 0;color:#4b3b29; }
+.course-plate-diagram :is(.chem-node,.process-visual>div,.qk-visual>div,.causal-visual>span) { flex:1;min-width:96px;display:grid;gap:7px;background:none;color:#4b3b29;padding:10px 7px;border:1px solid #a2896588;border-radius:2px;box-shadow:none;text-align:center; }
+.course-plate-diagram :is(.chem-node strong,.process-visual b,.qk-visual strong) { font:700 1.15rem/1.5 var(--font-title);color:var(--book-accent,#885c3a); }
+.course-plate-diagram :is(small,span,i) { font-size:.875rem;line-height:1.5;color:#55452f; }
+.course-plate-diagram .flow-arrow { color:#855d3b;display:grid;text-align:center;min-width:40px;background:none;border:0;box-shadow:none;padding:0; }
+.course-molecular-plate { display:block;width:100%;height:auto;mix-blend-mode:multiply; }
+.course-plate-diagram .flow-arrow>span { font-size:.75rem; }
+.grimoire[data-book-course="fisio"] .course-plate-diagram .causal-visual { display:flex;flex-direction:column;gap:5px; }
+.grimoire[data-book-course="fisio"] .course-plate-diagram .causal-visual>span { width:100%;padding:7px; }
+.grimoire[data-book-course="fisio"] .course-plate-diagram .causal-visual>span { min-width:0;color:#6a426d;border-color:#89658888; }
+.grimoire[data-book-course="fisico"] .course-plate-diagram { background:repeating-linear-gradient(0deg,transparent 0 23px,#627c9830 24px),repeating-linear-gradient(90deg,transparent 0 23px,#627c9825 24px);padding:12px 0; }
+.course-outline { padding:0;list-style:none;margin:25px 0;text-align:left;border-bottom:1px solid #a68a5b88; }
+.course-outline li { display:flex;gap:13px;padding:12px 0;border-top:1px solid #a68a5b88;font:1rem/1.5 var(--font-title); }
+.course-outline li>span { font:1rem/1.5 var(--font-title);color:var(--book-accent); }
+.course-outline b { font-weight:400; }
+.evaluation-chapter { position:relative;padding:20px 0 20px 21px;border-left:2px solid var(--book-accent);margin-bottom:8px; }
+.evaluation-chapter h2 { font-size:1.5rem; }
+.grimoire .chapter-label { font-size:.75rem;color:#684b32; }
+.grimoire :is(.evaluation-date,.chapter-summary,.map-record span,.map-record p,.map-legend,.preparation-detail .legacy-note) { font-size:.875rem; }
+.chapter-summary { color:#375239; }
+.folio-navigation { position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:20px;align-items:center;padding:12px 22px 0;color:#f6deb1; }
+.folio-navigation .ink-link { border:0;color:#ffeccc;font-size:.875rem;display:grid;gap:4px;line-height:1.5; }
+.folio-navigation .ink-link:last-child { text-align:right; }
+.folio-navigation .ink-link small { font-size:.75rem;color:#e3cba0;font-weight:400; }
+.folio-navigation .ink-link:disabled { opacity:.45; }
+.folio-navigation>span { font:1rem var(--font-title); }
+.map-node-label b { font-size:.875rem; }.map-node-label small { font-size:.75rem; }
+.preparation-detail p { font-size:1rem; }.grimoire .preparation-detail h2 { font-size:1.5rem; }
+@container(max-width:720px) {
+  .grimoire-spread { display:flex;flex-direction:column;min-height:0; }.grimoire-spread::after { display:none; }
+  .grimoire-folio { order:1;border-radius:6px 6px 0 0; }.grimoire-frontispiece { order:2;padding-top:0;border-radius:0 0 6px 6px; }
+  .grimoire-frontispiece>.eyebrow,.grimoire-frontispiece>.grimoire-crest,.grimoire-frontispiece>h2,.grimoire-frontispiece>p:not(.grimoire-margin-note),.grimoire-frontispiece>.folio-mark { display:none; }
+  .page-turn-leaf.grimoire-folio { inset:14px 17px 100px; }
+}
+@container(max-width:650px) {
+  .refuge .evaluation-board { grid-column:1;grid-row:2; }.refuge .day-paper { grid-column:1;grid-row:3; }.refuge .continue-volume { grid-column:1;grid-row:4; }
+  .refuge .evaluation-note>div { flex-wrap:wrap; }
+}
+@media(max-width:1100px) { .grimoire-frontispiece,.grimoire-folio { padding:28px 25px; } }
+@media(max-width:900px) and (min-width:701px) { .grimoire-spread { grid-template-columns:1fr; }.grimoire-spread::after { display:none; }.grimoire-frontispiece { order:2; }.grimoire-folio { order:1; }.grimoire-frontispiece>h2,.grimoire-frontispiece>.eyebrow,.grimoire-frontispiece>.grimoire-crest,.grimoire-frontispiece>p:not(.grimoire-margin-note) { display:none; }.grimoire-frontispiece { padding-top:0; } }
+@media(max-width:700px) {
+  .grimoire-scene { width:calc(100% - 16px); }.grimoire-wayfinding { padding-inline:8px;gap:4px 18px; }
+  .grimoire-wayfinding .wood-link { font-size:.875rem; }
+  .grimoire { margin:0;padding:8px;border-width:2px; }.grimoire-spread { min-height:0; }
+  .grimoire-tabs { gap:5px;left:8px;right:8px; }.grimoire-tab { font-size:.75rem;padding-inline:6px; }
+  .grimoire-folio { padding:27px 20px 20px; }.grimoire-frontispiece { padding:0 20px 20px; }
+  .page-turn-leaf.grimoire-folio { inset:8px 8px 100px; }
+  .grimoire-frontispiece>.course-plate,.grimoire-frontispiece>.course-outline { display:block; }
+  .grimoire h1 { font-size:1.85rem; }.course-opening-title { font-size:1.8rem; }
+  .book-colophon { margin:0; }.folio-navigation { padding:12px 5px 0;gap:10px; }.folio-navigation .ink-link { font-size:.875rem; }
+  .folio-navigation .ink-link small { max-width:110px; }.folio-navigation>span { font-size:.875rem; }
+  .evaluation-chapter { padding-left:12px; }.evaluation-chapter h2 { font-size:1.35rem; }
+  
+}
+
+/* UPDATE 01.2 A — the room is a full-width habitat; papers share its warm floor. */
+body[data-nexo-room="home"] #app { padding-top:0;background:#28332a; }
+.refuge-page { width:100%;max-width:none;margin:0;padding:0; }
+.refuge { container-type:inline-size;padding:0;border:0;border-radius:0;box-shadow:none;overflow:hidden;background:radial-gradient(ellipse at 15% 42%,#69774628,transparent 50%),radial-gradient(ellipse at 85% 62%,#66512f3d,transparent 55%),linear-gradient(#30291f,#3b3023 70%,#28332a); }
+.refuge::before,.refuge::after { display:none; }
+.refuge-room { position:relative;aspect-ratio:1672/941;isolation:isolate;overflow:hidden;mask-image:linear-gradient(#000 0%,#000 77%,#000c 86%,transparent 100%); }
+.home-art-plane { position:absolute;left:0;top:0;height:100%;aspect-ratio:1672/941;min-width:100%;background:var(--room-art) center / 100% 100% no-repeat; }
+.home-art-plane::after { content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,#21271918,transparent 50%,#30291f33); }
+.home-art-plane .refuge-foliage { z-index:0;background-position:center;background-size:100% 100%;mask-image:linear-gradient(#000 0%,#0009 14%,transparent 32%);animation-duration:10s; }
+.home-window-tone { position:absolute;left:5.1%;top:9.5%;width:19.2%;height:35.5%;z-index:2;border-radius:48% 48% 4% 4%;mask-image:radial-gradient(ellipse at 50% 55%,#000 40%,#000b 65%,transparent 83%);background:linear-gradient(120deg,#fff3bd70,#edbd5333);mix-blend-mode:soft-light;pointer-events:none; }
+.home-art-plane .refuge-light { z-index:3!important;background:radial-gradient(ellipse at 15% 35%,#f9d78833,transparent 36%),radial-gradient(ellipse at 77% 40%,#f0ad3722,transparent 19%);animation-duration:12s; }
+.home-scene-zone { position:absolute;pointer-events:none;visibility:hidden; }
+
+.refuge .refuge-room .stage-companion { width:100%;margin:0;transform:none;filter:drop-shadow(0 5px 3px #1e22164d); }
+.refuge-room .stage-companion .avatar-shell-v10.large { width:100%; }
+.refuge-room .avatar-shadow-v10 { bottom:9%;height:5%;filter:blur(3px);background:#30221670; }
+
+.home-room-hud { position:absolute;z-index:6;left:4%;bottom:23%; }
+.refuge .home-room-hud .streak-hud { background:#27372dba;border:1px solid #ceb97988;box-shadow:none;font-size:.875rem; }
+.home-clock { --px:3;position:absolute;z-index:7;left:50%;top:3%;width:min(94%,580px);box-sizing:border-box;display:grid;grid-template-columns:auto 1fr auto;gap:4px 16px;align-items:center;padding:2px 10px 6px;border:calc(8*var(--px)*1px) solid transparent;border-image:url('../assets/home-scenes/reloj-marco.png') 8 fill / calc(8*var(--px)*1px) stretch;image-rendering:pixelated;color:#f1e6c8;filter:drop-shadow(0 6px 10px #0007);transform-origin:50% 0;transform:translateX(-50%);animation:hcDrop 1.1s cubic-bezier(.3,1.4,.5,1) both,hcSway 7s ease-in-out 1.1s infinite alternate; }
+.home-clock .hc-now { display:grid;gap:5px;justify-items:start;margin-left:calc(8*var(--px)*1px); }
+.home-clock .hc-hour { height:28px;color:#fbe9b0; }
+.home-clock .hc-hour .pixel-digits { height:100%;width:auto;fill:#fbe9b0;filter:drop-shadow(0 2px 0 #1a0f13); }
+.home-clock .hc-greet .pixel-text {fill:#d9c995;opacity:.9; }
+.home-clock .hc-timer { display:grid;gap:5px;justify-items:start; }
+.home-clock .hc-label .pixel-text {fill:#d9c995; }
+.home-clock .hc-digits { height:28px; }
+.home-clock .hc-digits .pixel-digits { height:100%;width:auto;fill:#f6e7b0; }
+.home-clock.is-running .hc-digits .pixel-digits { animation:hcGlow 2s ease-in-out infinite; }
+.home-clock .hc-controls { display:flex;gap:8px;margin-right:calc(8*var(--px)*1px); }
+
+.home-clock .hc-btn { display:grid;place-items:center;min-height:38px;padding:4px 12px;border:2px solid #1a0f13;border-radius:2px;background:#3a5240;cursor:pointer;box-shadow:0 3px 0 #0a0608,inset 0 2px 0 #ffffff26;transition:transform .08s,filter .15s; }
+.home-clock .hc-btn .pixel-text {fill:#f1e6c8; }
+.home-clock .hc-btn.hc-primary { background:#d3a95e; }
+.home-clock .hc-btn.hc-primary .pixel-text { fill:#2a2013; }
+.home-clock .hc-btn:hover { filter:brightness(1.15);transform:translateY(-1px); }
+.home-clock .hc-btn:active { transform:translateY(2px);box-shadow:0 1px 0 #0a0608,inset 0 2px 0 #ffffff26; }
+.home-clock .hc-meta { grid-column:1/-1;margin:2px calc(8*var(--px)*1px) 0;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between; }
+.home-clock .hc-plate { display:inline-flex;align-items:center;padding:4px 10px;border:2px solid #1a0f13;border-radius:2px;background:#2b3d33;box-shadow:inset 0 2px 0 #ffffff1c; }
+.home-clock .hc-plate .pixel-text {fill:#e9d9a4; }
+.home-clock .hc-plate { max-width:100%;overflow:hidden; }
+.home-clock .hc-plate-exam { background:#5b2a24; }
+.home-clock .hc-plate-exam .pixel-text { fill:#ffd9b0; }
+.home-clock i { position:absolute;display:block;pointer-events:none;image-rendering:pixelated;background-repeat:no-repeat; }
+.hc-gear { left:calc(-11*var(--px)*1px);top:calc(-11*var(--px)*1px);width:calc(20*var(--px)*1px);height:calc(20*var(--px)*1px);background-image:url('../assets/home-scenes/reloj-engranaje.png');background-size:calc(160*var(--px)*1px) 100%;animation:hcSheetGear 14s steps(8) infinite; }
+.hc-orb { right:calc(-11*var(--px)*1px);top:calc(-11*var(--px)*1px);width:calc(20*var(--px)*1px);height:calc(20*var(--px)*1px);background-image:url('../assets/home-scenes/reloj-orbe.png');background-size:calc(120*var(--px)*1px) 100%;animation:hcSheetOrb 3.6s steps(6) infinite; }
+.home-clock.is-running .hc-gear { animation-duration:1.4s; }
+.home-clock.is-running .hc-orb { animation-duration:1s; }
+.hc-leaf { bottom:calc(-13*var(--px)*1px);width:calc(12*var(--px)*1px);height:calc(16*var(--px)*1px);background-image:url('../assets/home-scenes/reloj-hoja.png');background-size:calc(96*var(--px)*1px) 100%;animation:hcSheetLeaf 5s steps(8) infinite; }
+.hc-leaf-l { left:calc(14*var(--px)*1px); }
+.hc-leaf-r { right:calc(22*var(--px)*1px);transform:scaleX(-1);animation-delay:-2s; }
+@keyframes hcSheetGear { to { background-position-x:calc(-160*var(--px)*1px); } }
+@keyframes hcSheetOrb { to { background-position-x:calc(-120*var(--px)*1px); } }
+@keyframes hcSheetLeaf { to { background-position-x:calc(-96*var(--px)*1px); } }
+@keyframes hcDrop { 0% { opacity:0;transform:translateX(-50%) translateY(-50px) rotate(-4deg); } 55% { opacity:1;transform:translateX(-50%) translateY(6px) rotate(1.8deg); } 80% { transform:translateX(-50%) translateY(-2px) rotate(-.8deg); } 100% { transform:translateX(-50%); } }
+@keyframes hcSway { from { transform:translateX(-50%) rotate(-.45deg); } to { transform:translateX(-50%) rotate(.45deg); } }
+@keyframes hcGlow { 0%,100% { filter:drop-shadow(0 0 1px #f6e7b055); } 50% { filter:drop-shadow(0 0 6px #f6e7b0cc); } }
+body[data-nexo-ambient-motion="reduced"] .home-clock,body[data-nexo-ambient-motion="reduced"] .home-clock *,body[data-nexo-quality="low"] .home-clock *,body.ambient-paused .home-clock * { animation:none !important; }
+@media (prefers-reduced-motion:reduce) { .home-clock,.home-clock * { animation:none !important; } .hc-spark { display:none; } }
+
+.refuge-caption { padding:27px 25px 90px;font-size:.875rem; }
+body[data-nexo-time="morning"] .home-window-tone { background:linear-gradient(145deg,#fce8b899,#efb66033); }
+body[data-nexo-time="day"] .home-window-tone { background:linear-gradient(120deg,#f8fbdd88,#bdddb23b); }
+body[data-nexo-time="dusk"] .home-window-tone { background:linear-gradient(145deg,#eea55399,#a563714d);mix-blend-mode:color; }
+body[data-nexo-time="dusk"] .home-art-plane::after { background:linear-gradient(120deg,#6a35293b,#52342633); }
+body[data-nexo-time="dusk"] .home-art-plane .refuge-light { background:radial-gradient(ellipse at 14% 37%,#f09d4144,transparent 40%),radial-gradient(ellipse at 77% 40%,#eda43a38,transparent 21%); }
+body[data-nexo-time="night"] .home-art-plane::after { background:linear-gradient(120deg,#152137a3,#14253470 50%,#14203155); }
+body[data-nexo-time="night"] .home-window-tone { background:linear-gradient(160deg,#102644aa,#29476788);mix-blend-mode:multiply; }
+body[data-nexo-time="night"] .home-art-plane .refuge-light { background:radial-gradient(ellipse at 15% 35%,#879ec130,transparent 31%),radial-gradient(ellipse at 35% 41%,#fac57540,transparent 13%),radial-gradient(ellipse at 81% 41%,#ffbe4940,transparent 18%); }
+body[data-nexo-time="night"] .refuge-room .stage-companion { filter:brightness(.83) saturate(.84) drop-shadow(0 5px 4px #111a2788); }
+@container(max-width:900px) {
+  .refuge .evaluation-notes { grid-template-columns:1fr; }
+  .refuge .evaluation-board { grid-column:1;grid-row:1; }
+  .refuge .day-paper { grid-column:1;grid-row:2; }
+  .refuge .continue-volume { grid-column:1;grid-row:3; }
+}
+
+@media(max-width:700px) {
+  .refuge-page { width:100%;padding-bottom:0; }
+  .refuge-room { aspect-ratio:1.45;mask-image:linear-gradient(#000 0%,#000 75%,#0009 88%,transparent 100%); }
+  .home-art-plane { left:-4%;min-width:0; }
+  
+  
+  
+  
+  .home-room-hud { left:18px;bottom:18%; }
+  .refuge .home-room-hud .streak-hud { font-size:.75rem;padding:6px 9px; }
+  
+  
+  
+  
+  
+  
+  
+}
+
+/* UPDATE 01.2 B — transient, single-pulse opening light, removed with the leaf. */
+.book-opening-glow { position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,#ffe5a188,transparent 48%);opacity:0; }
+.book-opening-spark { position:absolute;pointer-events:none;font-style:normal;color:#fff0c0;font-size:1.2rem;text-shadow:0 0 10px #e8bc65;opacity:0;left:51%;top:29%; }
+.book-opening-spark:nth-of-type(2) { left:58%;top:49%;font-size:.85rem; }
+.book-opening-spark:nth-of-type(3) { left:44%;top:67%;font-size:1rem; }
+
+/* UPDATE 01.3 checkpoint 1 — geometry comes from home-scene.js, normal view is invisible. */
+.home-art-plane[data-scene-id] { aspect-ratio:var(--scene-aspect); }
+.home-art-plane[data-scene-id] .scene-ambient-layer { position:absolute;z-index:var(--scene-depth)!important; }
+
+.home-art-plane[data-scene-id] .home-window-tone { transition:opacity .25s; }
+.scene-slot { position:absolute;z-index:var(--scene-depth);pointer-events:none; }
+.scene-object-image,.scene-object-foreground { position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none; }
+.scene-object-foreground { z-index:1; }
+.scene-hotspot { position:absolute;z-index:var(--scene-depth);padding:0;margin:0;background:transparent;border:0;border-radius:0;box-shadow:none;color:transparent;cursor:pointer; }
+.scene-hotspot:hover { box-shadow:inset 0 0 18px #f5e5b016; }
+.scene-hotspot:focus-visible { outline:2px solid #e3d094b3;outline-offset:-3px;box-shadow:inset 0 0 18px #f5e5b01a; }
+.scene-debug .scene-slot { outline:2px dashed #8dddcc;outline-offset:-2px;background:#8dddcc10; }
+.scene-debug .scene-hotspot { outline:2px dotted #ffcf7f;outline-offset:-7px;background:#f6ce7914; }
+.scene-debug-label { position:absolute;left:8px;top:8px;background:#18271ff0;padding:3px 5px;font:12px/1.3 monospace;color:#c3fff1;white-space:nowrap;pointer-events:none; }
+.scene-hotspot .scene-debug-label { top:32px;color:#ffdf9d; }
+.scene-debug-anchor { position:absolute;width:8px;height:8px;transform:translate(-50%,-50%);border:1px solid #fff;background:#b2a7ff;z-index:10;pointer-events:none; }
+.scene-debug-anchor small { position:absolute;top:10px;left:3px;background:#19291fec;color:#e3deff;padding:2px 4px;font:12px/1.3 monospace; }
+@media(prefers-reduced-motion:reduce) { .home-art-plane[data-scene-id] .home-window-tone { transition:none; } }
+body.reduce-motion .home-art-plane[data-scene-id] .home-window-tone { transition:none; }
+
+/* UPDATE 01.3 — luz continua del Inicio.
+   NexoAmbientTime escribe --w-dawn/--w-day/--w-dusk/--w-night (suman 1) según la hora.
+   Cada capa usa esos pesos: la sala pasa de una luz a otra sin saltos. */
+body { --w-dawn:0;--w-day:1;--w-dusk:0;--w-night:0;
+  --sun:calc(var(--w-day) + var(--w-dawn) * .85 + var(--w-dusk) * .5);
+  --lamps:calc(var(--w-night) + var(--w-dusk) * .55 + var(--w-dawn) * .25); }
+.home-light-layer { pointer-events:none;background:center / 100% 100% no-repeat; }
+body.ambient-live .home-light-layer,body.ambient-live .home-art-plane[data-scene-id] .home-window-tone { transition:opacity 300s linear; }
+body.ambient-preview .home-light-layer,body.ambient-preview .home-art-plane[data-scene-id] .home-window-tone { transition:opacity 1.2s ease; }
+body.ambient-timelapse .home-light-layer,body.ambient-timelapse .home-art-plane[data-scene-id] .home-window-tone { transition:opacity .25s linear; }
+/* Vista exterior: tres imágenes que se funden entre sí; de día se ve el original. */
+.home-view-dawn { background-image:url('../assets/home-scenes/window-view-morning.png');opacity:var(--w-dawn); }
+.home-view-dusk { background-image:url('../assets/home-scenes/window-view-dusk.png');opacity:var(--w-dusk); }
+.home-view-night { background-image:url('../assets/home-scenes/window-view-night.png');opacity:var(--w-night); }
+/* Sin manchas de sol cuando el sol se va. */
+.home-floor-night { background-image:url('../assets/home-scenes/floor-night.webp');opacity:calc(var(--w-night) + var(--w-dusk) * .55); }
+/* Tinte de toda la sala por momento del día. */
+.home-tint-dawn { background:linear-gradient(120deg,#f2c3a226,#5a4a7a1f);opacity:var(--w-dawn); }
+.home-tint-dusk { background:linear-gradient(120deg,#6a35293b,#52342633);opacity:var(--w-dusk); }
+.home-tint-night { background:linear-gradient(120deg,#152137a3,#14253470 50%,#14203155);opacity:var(--w-night); }
+/* Faroles y velas: más presentes mientras menos sol hay. */
+.home-lamp-glow { mix-blend-mode:screen;opacity:var(--lamps);
+  --glow:
+    radial-gradient(5.68% 10.10% at 21.05% 38.47%,rgb(255 190 105 / 0.715),rgb(255 160 70 / 0.251) 45%,transparent 100%),
+    radial-gradient(3.59% 6.38% at 9.87% 49.73%,rgb(255 190 105 / 0.585),rgb(255 160 70 / 0.205) 45%,transparent 100%),
+    radial-gradient(4.19% 7.44% at 36.84% 17.53%,rgb(255 190 105 / 0.585),rgb(255 160 70 / 0.205) 45%,transparent 100%),
+    radial-gradient(3.59% 6.38% at 68.18% 21.79%,rgb(255 190 105 / 0.520),rgb(255 160 70 / 0.182) 45%,transparent 100%),
+    radial-gradient(5.08% 9.03% at 94.32% 48.78%,rgb(255 190 105 / 0.650),rgb(255 160 70 / 0.227) 45%,transparent 100%),
+    radial-gradient(2.99% 5.31% at 37.20% 53.56%,rgb(255 190 105 / 0.520),rgb(255 160 70 / 0.182) 45%,transparent 100%),
+    radial-gradient(4.78% 8.50% at 83.85% 35.60%,rgb(255 190 105 / 0.520),rgb(255 160 70 / 0.182) 45%,transparent 100%),
+    radial-gradient(2.39% 4.25% at 27.51% 36.88%,rgb(255 190 105 / 0.520),rgb(255 160 70 / 0.182) 45%,transparent 100%),
+    radial-gradient(2.39% 4.25% at 53.47% 37.09%,rgb(255 190 105 / 0.455),rgb(255 160 70 / 0.159) 45%,transparent 100%),
+    radial-gradient(2.69% 4.78% at 52.03% 34.43%,rgb(255 190 105 / 0.390),rgb(255 160 70 / 0.137) 45%,transparent 100%),
+    radial-gradient(2.39% 4.25% at 95.39% 27.74%,rgb(255 190 105 / 0.455),rgb(255 160 70 / 0.159) 45%,transparent 100%),
+    radial-gradient(2.09% 3.72% at 85.53% 39.53%,rgb(255 190 105 / 0.390),rgb(255 160 70 / 0.137) 45%,transparent 100%); }
+.home-lamp-glow::before { content:"";position:absolute;inset:0;background:var(--glow);animation:nexoFlicker 3.7s ease-in-out infinite; }
+/* Las reglas antiguas por estado (saltos) quedan neutralizadas en el Inicio. */
+body[data-nexo-time] .home-art-plane::after { background:linear-gradient(180deg,#21271918,transparent 50%,#30291f33); }
+body[data-nexo-time] .home-art-plane[data-scene-id] .home-window-tone { background:linear-gradient(120deg,#f8fbdd88,#bdddb23b);mix-blend-mode:soft-light;opacity:var(--sun); }
+body[data-nexo-time] .home-art-plane .refuge-light { background:
+    radial-gradient(ellipse at 15% 35%,rgb(249 215 136 / calc(.2 * var(--sun))),transparent 36%),
+    radial-gradient(ellipse at 77% 40%,rgb(240 173 55 / calc(.13 * var(--sun))),transparent 19%),
+    radial-gradient(ellipse at 15% 35%,rgb(135 158 193 / calc(.19 * var(--w-night))),transparent 31%); }
+body[data-nexo-time] .refuge-room .stage-companion { filter:brightness(calc(1 - .17 * var(--w-night))) saturate(calc(1 - .16 * var(--w-night))) drop-shadow(0 5px 3px #1e22164d); }
+@media(prefers-reduced-motion:reduce) { body.ambient-preview .home-light-layer { transition:none; } }
+
+/* UPDATE 01.3 — objetos tocables: sin etiquetas ni bordes; sólo un brillo suave al pasar o enfocar. */
+.scene-hotspot,.scene-hotspot:hover,.scene-hotspot:focus-visible { box-shadow:none; }
+.scene-hotspot::after { content:"";position:absolute;inset:-10%;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,#ffe9b066,#ffd98a24 60%,transparent);opacity:0;transform:scale(.92);transition:opacity .35s ease,transform .35s ease; }
+.scene-hotspot:hover::after,.scene-hotspot:focus-visible::after { opacity:1;transform:scale(1); }
+.scene-hotspot:focus-visible { outline:2px solid #e3d094b3;outline-offset:2px;border-radius:14px; }
+.scene-hotspot:active::after { opacity:1;background:radial-gradient(closest-side,#fff0c466,#ffd98a22 60%,transparent); }
+@media(prefers-reduced-motion:reduce) { .scene-hotspot::after { transition:none;transform:none; } }
+
+/* UPDATE 01.3 — objetos nuevos pintados: báculo (Tienda) y mapa enrollado (Bitácora). */
+.home-staff { background-image:url('../assets/home-scenes/staff.png'); }
+.home-map { background-image:url('../assets/home-scenes/map.png'); }
+.home-staff-glow { mix-blend-mode:screen;opacity:calc(.3 + .5 * var(--lamps)); }
+.home-staff-glow::before { content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(closest-side,rgb(255 226 150 / .6),rgb(255 190 90 / .16) 55%,transparent);animation:nexoOrb 4.6s ease-in-out infinite; }
+.home-staff-star { background-image:url('../assets/home-scenes/staff-star.png');transform-origin:50% 0;animation:nexoSwing 5.6s ease-in-out infinite; }
+@keyframes nexoSwing { 0%,100% { transform:rotate(-7deg); } 50% { transform:rotate(7deg); } }
+
+/* UPDATE 01.3 — paso 3, vida: llamas que titilan, orbe que respira, polvo en la luz del sol. */
+@keyframes nexoFlicker { 0%,100% { opacity:1; } 17% { opacity:.84; } 31% { opacity:.97; } 52% { opacity:.88; } 68% { opacity:1; } 84% { opacity:.9; } }
+@keyframes nexoOrb { 0%,100% { opacity:.75;transform:scale(.94); } 50% { opacity:1;transform:scale(1.05); } }
+@keyframes nexoDust { from { background-position:0 0,0 0; } to { background-position:-180px -220px,-260px -310px; } }
+.home-dust { pointer-events:none;mix-blend-mode:screen;opacity:calc(var(--sun) * .85);
+  background:
+    radial-gradient(circle at 18% 22%,#fff3cc 0 1px,transparent 1.8px),radial-gradient(circle at 64% 41%,#ffeab0 0 .8px,transparent 1.5px),
+    radial-gradient(circle at 37% 77%,#fff6d8 0 1.1px,transparent 1.9px),radial-gradient(circle at 82% 12%,#ffe9b0 0 .7px,transparent 1.4px);
+  background-size:180px 220px,260px 310px,180px 220px,260px 310px;
+  mask-image:linear-gradient(118deg,transparent 8%,#000 26%,#000 55%,transparent 82%);
+  animation:nexoDust 70s linear infinite; }
+body.ambient-paused :is(.home-lamp-glow,.home-staff-glow)::before,body.ambient-paused :is(.home-dust,.home-staff-star) { animation-play-state:paused; }
+body[data-nexo-ambient-motion="reduced"] :is(.home-lamp-glow,.home-staff-glow)::before,body[data-nexo-quality="low"] :is(.home-lamp-glow,.home-staff-glow)::before { animation:none; }
+body[data-nexo-ambient-motion="reduced"] .home-dust,body[data-nexo-quality="low"] .home-dust { display:none; }
+body[data-nexo-ambient-motion="reduced"] .home-staff-star,body[data-nexo-quality="low"] .home-staff-star { animation:none; }
+@media(prefers-reduced-motion:reduce) { :is(.home-lamp-glow,.home-staff-glow)::before,.home-staff-star { animation:none; } .home-dust { display:none; } }
+
+/* UPDATE 01.4 — encuadre móvil: la sala completa se desliza de lado en vez de cortarse a la derecha.
+   En escritorio .home-pan sólo envuelve la escena (no cambia nada). */
+.home-pan { position:absolute;inset:0;overflow:hidden; }
+.home-pan-hint { display:none; }
+@media(max-width:700px) {
+  .refuge-room { aspect-ratio:1.2; }
+  .home-pan { overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch; }
+  .home-pan::-webkit-scrollbar { display:none; }
+  .home-pan .home-art-plane { left:0;min-width:0; }
+  .home-pan-hint { display:block;position:absolute;z-index:6;right:14px;bottom:20%;padding:5px 11px;border:1px solid #ceb97966;border-radius:999px;background:#27372dc4;color:#f3e6c0;font:.72rem/1.3 var(--font-ui);pointer-events:none;opacity:0;transition:opacity .5s ease; }
+  .home-pan-hint[data-visible="true"] { opacity:1; }
+  .home-room-hud { bottom:20%; }
+}
+@media(max-width:700px) and (prefers-reduced-motion:reduce) { .home-pan-hint { transition:none; } }
+
+/* UPDATE 01.4 — hojas con vida: cuatro enredaderas recortadas del arte se mecen desde arriba.
+   Debajo de cada una va su "fondo reconstruido" para que al moverse no se vea doble. Quedan bajo el tinte, así que toman la luz de cada hora. */
+.home-leaf { transform-origin:50% 0;animation:nexoLeafSway var(--sway-time,8s) ease-in-out var(--sway-delay,0s) infinite;will-change:transform; }
+.home-leaf-plate-a { background-image:url('../assets/home-scenes/leaf-a-plate.png'); } .home-leaf-a { background-image:url('../assets/home-scenes/leaf-a.png');--sway-time:9.4s;--sway-delay:-2.1s;--sway:1.1deg; }
+.home-leaf-plate-b { background-image:url('../assets/home-scenes/leaf-b-plate.png'); } .home-leaf-b { background-image:url('../assets/home-scenes/leaf-b.png');--sway-time:7.6s;--sway-delay:-4.8s;--sway:1.4deg; }
+.home-leaf-plate-c { background-image:url('../assets/home-scenes/leaf-c-plate.png'); } .home-leaf-c { background-image:url('../assets/home-scenes/leaf-c.png');--sway-time:10.8s;--sway-delay:-1.2s;--sway:0.9deg; }
+.home-leaf-plate-d { background-image:url('../assets/home-scenes/leaf-d-plate.png'); } .home-leaf-d { background-image:url('../assets/home-scenes/leaf-d.png');--sway-time:8.3s;--sway-delay:-6.0s;--sway:1.2deg; }
+@keyframes nexoLeafSway { 0%,100% { transform:rotate(calc(var(--sway,1deg) * -1)); } 50% { transform:rotate(var(--sway,1deg)) skewX(calc(var(--sway,1deg) * -.4)); } }
+body.ambient-paused .home-leaf { animation-play-state:paused; }
+body[data-nexo-ambient-motion="reduced"] .home-leaf,body[data-nexo-quality="low"] .home-leaf { animation:none; }
+@media(prefers-reduced-motion:reduce) { .home-leaf { animation:none; } }
+
+/* UPDATE 01.4 — iconos propios de Bitácora (almanaque con luna) y Tienda (cabeza del báculo estelar). */
+.header-action { display:inline-grid;place-items:center; }
+.nexo-icon { width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round; }
+.nexo-icon .nexo-icon-fill { fill:#e9c77a;stroke:#e9c77a;stroke-width:.6; }
+.header-action:hover .nexo-icon .nexo-icon-fill { fill:#ffdf96;stroke:#ffdf96; }
+@media(max-width:700px) { .nexo-icon { width:19px;height:19px; } }
+
+/* UPDATE 01.5 — intro del grimorio (portada pintada por tools/grimoire-cover/build_cover.py).
+   La coreografía está en platform/animation.js; aquí sólo vive el "objeto": portada, guardas, páginas y brillos. */
+@property --sweep { syntax:'<angle>';inherits:false;initial-value:0deg; }
+.grimoire-intro { position:fixed;inset:0;z-index:80;display:grid;place-items:center;cursor:pointer;
+  --gi-h:min(76vh,680px);--gi-w:min(calc(var(--gi-h) * .75),44vw); }
+.gi-backdrop { position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgb(74 58 30 / .62),rgb(10 14 12 / .93) 68%);opacity:0; }
+.gi-stage { position:relative;perspective:2400px;perspective-origin:50% 42%; }
+.gi-book { position:relative;width:var(--gi-w);aspect-ratio:3/4;transform-style:preserve-3d; }
+.gi-block { position:absolute;inset:1.1% 1.8% 1.1% 0;transform-style:preserve-3d;border-radius:3px 8px 8px 3px;background:#eddab2;
+  box-shadow:3px 3px 0 -1px #d8bf8c,6px 6px 0 -2px #c7aa75,9px 9px 0 -3px #b99a64,0 34px 60px rgb(0 0 0 / .55); }
+.gi-block::after { content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgb(92 60 30 / .38),transparent 7%),radial-gradient(ellipse at 60% 40%,transparent 55%,rgb(120 86 40 / .18)); }
+.gi-page { position:absolute;inset:0;transform-origin:left center;border-radius:2px 6px 6px 2px;
+  background:linear-gradient(90deg,#d6bf94,#f2e2bd 10%,#f7e9c9 62%,#e9d4a9);box-shadow:inset 7px 0 12px -8px rgb(80 50 20 / .5); }
+.gi-cover { position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d; }
+.gi-front,.gi-back { position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:9px 14px 14px 9px;overflow:hidden; }
+.gi-front { background:#1f3a2e;box-shadow:0 30px 55px rgb(0 0 0 / .5); }
+.gi-art { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block; }
+.gi-back { transform:rotateY(180deg);background:#1d362b;
+  border:calc(var(--gi-w) * .04) solid #1d362b;box-shadow:inset 0 0 0 2px #b8995a66,inset 0 0 34px rgb(0 0 0 / .5); }
+.gi-glow { position:absolute;inset:0;opacity:0;mix-blend-mode:screen;background:url('../assets/grimoire/grimoire-cover-glow.webp') center / 100% 100% no-repeat;
+  -webkit-mask-image:conic-gradient(from 0deg at 50% 50%,#000 var(--sweep),transparent calc(var(--sweep) + 34deg));
+  mask-image:conic-gradient(from 0deg at 50% 50%,#000 var(--sweep),transparent calc(var(--sweep) + 34deg)); }
+.gi-gem { position:absolute;left:52.83%;top:48.13%;width:28%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(closest-side,rgb(190 255 244 / .85),rgb(90 225 205 / .3) 32%,rgb(255 214 140 / .12) 60%,transparent 74%); }
+.gi-sheen { position:absolute;inset:0;opacity:0;mix-blend-mode:overlay;background-image:linear-gradient(105deg,transparent 38%,rgb(255 236 190 / .45) 47%,rgb(255 250 232 / .75) 50%,rgb(255 236 190 / .4) 53%,transparent 62%);background-size:260% 100%;background-position:130% 0; }
+.gi-clasp { position:absolute;inset:0;transform-origin:92% 50%;background:url('../assets/grimoire/grimoire-cover-clasp.png') center / 100% 100% no-repeat; }
+.gi-sparks { position:absolute;inset:0;pointer-events:none; }
+.gi-spark { position:absolute;left:calc(44% + var(--i) * 2.2%);top:calc(56% - var(--i) * 1.4%);width:7px;height:7px;border-radius:50%;opacity:0;
+  background:radial-gradient(#fff7d6,#f3c76d 45%,transparent 72%);box-shadow:0 0 12px 2px rgb(245 205 120 / .7); }
+.gi-hint { position:absolute;bottom:4.5vh;left:0;right:0;margin:0;text-align:center;color:#efdcae;font:.8rem/1.4 var(--font-ui);letter-spacing:.08em;opacity:0; }
+@media(max-width:760px) { .grimoire-intro { --gi-h:min(68vh,560px);--gi-w:min(calc(var(--gi-h) * .75),76vw); } }
+@media(prefers-reduced-motion:reduce) { .grimoire-intro { display:none; } }
+
+.gi-hint-touch { display:none; }
+@media(hover:none) { .gi-hint-mouse { display:none; } .gi-hint-touch { display:inline; } }
+/* UPDATE 01.5 — cambio entre secciones principales: "nuevo capítulo" sutil (antes partía en 72 % de opacidad). */
+#app[data-chapter-transition="1"]>.page { animation:nexoChapter .34s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes nexoChapter { from { opacity:0;transform:translateY(12px); } 60% { opacity:1; } to { opacity:1;transform:none; } }
+#app[data-world-transition="book-first"]>.page,#app[data-world-transition="book-return"]>.page,#app[data-world-transition="book-close"]>.page,#app[data-world-transition="page-turn"]>.page { animation:none; }
+@media(prefers-reduced-motion:reduce) { #app[data-chapter-transition="1"]>.page { animation:none; } }
+body.reduce-motion #app>.page { animation:none!important; }
+
+/* UPDATE 01.7 — páginas llenas de dibujos según el ramo (tools/grimoire-pages/build_decor.py).
+   Cada SVG trae su opacidad "horneada", así una sola capa apila: volutas en las 4 esquinas, ilustración grande,
+   escena al pie y el fondo de motivos pequeños. isolation + z-index:-1: sobre el papel, bajo el texto. */
+.grimoire { --decor-tile:url('../assets/grimoire/decor/index-tile.svg');--decor-hero:url('../assets/grimoire/decor/index-hero.svg');--decor-foot:url('../assets/grimoire/decor/index-foot.svg');--decor-scene:url('../assets/grimoire/decor/index-scene.svg');--c-tl:url('../assets/grimoire/decor/index-corner-tl.svg');--c-tr:url('../assets/grimoire/decor/index-corner-tr.svg');--c-bl:url('../assets/grimoire/decor/index-corner-bl.svg');--c-br:url('../assets/grimoire/decor/index-corner-br.svg'); }
+.grimoire[data-book-course="organica"] { --decor-tile:url('../assets/grimoire/decor/organica-tile.svg');--decor-hero:url('../assets/grimoire/decor/organica-hero.svg');--decor-foot:url('../assets/grimoire/decor/organica-foot.svg');--decor-scene:url('../assets/grimoire/decor/organica-scene.svg');--c-tl:url('../assets/grimoire/decor/organica-corner-tl.svg');--c-tr:url('../assets/grimoire/decor/organica-corner-tr.svg');--c-bl:url('../assets/grimoire/decor/organica-corner-bl.svg');--c-br:url('../assets/grimoire/decor/organica-corner-br.svg'); }
+.grimoire[data-book-course="analitica"] { --decor-tile:url('../assets/grimoire/decor/analitica-tile.svg');--decor-hero:url('../assets/grimoire/decor/analitica-hero.svg');--decor-foot:url('../assets/grimoire/decor/analitica-foot.svg');--decor-scene:url('../assets/grimoire/decor/analitica-scene.svg');--c-tl:url('../assets/grimoire/decor/analitica-corner-tl.svg');--c-tr:url('../assets/grimoire/decor/analitica-corner-tr.svg');--c-bl:url('../assets/grimoire/decor/analitica-corner-bl.svg');--c-br:url('../assets/grimoire/decor/analitica-corner-br.svg'); }
+.grimoire[data-book-course="fisico"] { --decor-tile:url('../assets/grimoire/decor/fisico-tile.svg');--decor-hero:url('../assets/grimoire/decor/fisico-hero.svg');--decor-foot:url('../assets/grimoire/decor/fisico-foot.svg');--decor-scene:url('../assets/grimoire/decor/fisico-scene.svg');--c-tl:url('../assets/grimoire/decor/fisico-corner-tl.svg');--c-tr:url('../assets/grimoire/decor/fisico-corner-tr.svg');--c-bl:url('../assets/grimoire/decor/fisico-corner-bl.svg');--c-br:url('../assets/grimoire/decor/fisico-corner-br.svg'); }
+.grimoire[data-book-course="fisio"] { --decor-tile:url('../assets/grimoire/decor/fisio-tile.svg');--decor-hero:url('../assets/grimoire/decor/fisio-hero.svg');--decor-foot:url('../assets/grimoire/decor/fisio-foot.svg');--decor-scene:url('../assets/grimoire/decor/fisio-scene.svg');--c-tl:url('../assets/grimoire/decor/fisio-corner-tl.svg');--c-tr:url('../assets/grimoire/decor/fisio-corner-tr.svg');--c-bl:url('../assets/grimoire/decor/fisio-corner-bl.svg');--c-br:url('../assets/grimoire/decor/fisio-corner-br.svg'); }
+.grimoire-frontispiece,.grimoire-folio { isolation:isolate; }
+.grimoire-frontispiece::before,.grimoire-folio::before { content:"";position:absolute;inset:10px;z-index:-1;pointer-events:none;
+  background:var(--c-tl) top left / 78px no-repeat,var(--c-tr) top right / 78px no-repeat,var(--c-bl) bottom left / 78px no-repeat,var(--c-br) bottom right / 78px no-repeat,
+    var(--decor-tile) 0 0 / 500px auto repeat; }
+.grimoire-folio::before { background-position:top left,top right,bottom left,bottom right,150px 40px; }
+.grimoire-frontispiece::after,.grimoire-folio::after { content:"";position:absolute;inset:0;z-index:-1;pointer-events:none; }
+.grimoire-folio::after { background:var(--decor-hero) top 16px right 16px / min(42%,300px) auto no-repeat,var(--decor-scene) bottom 14px center / min(62%,340px) auto no-repeat; }
+.grimoire-frontispiece::after { background:var(--decor-foot) bottom 26px center / min(88%,430px) auto no-repeat; }
+.grimoire[data-book-course="index"] .grimoire-frontispiece::after { background-size:min(70%,300px) auto; }
+.grimoire[data-book-course="index"] .grimoire-frontispiece { padding-bottom:calc(min(70%,300px) + 20px); }
+.grimoire-frontispiece { padding-bottom:calc(clamp(100px,11vw,150px) + 30px); }
+.grimoire-folio { padding-bottom:calc(clamp(170px,18vw,270px) + 16px); }
+.page-turn-leaf.grimoire-folio::after,.page-turn-leaf.grimoire-folio::before { display:none; }
+@media(max-width:700px) {
+  .grimoire-frontispiece::before,.grimoire-folio::before { background-size:56px,56px,56px,56px,380px auto; }
+  .grimoire-folio::after { background-size:46% auto,92% auto; }
+  .grimoire-frontispiece::after { display:none; }
+  .grimoire-frontispiece { padding-bottom:26px; }
+  .grimoire-folio { padding-bottom:calc(56vw + 20px); }
+}
+
+/* UPDATE 01.6 — hoja que se curva al cambiar de ramo (coreografía en platform/animation.js → pageCurl). */
+.curl-stage { position:absolute;inset:0;z-index:6;pointer-events:none;perspective:2600px; }
+.curl-under { position:absolute;overflow:hidden;z-index:0; }
+.curl-shade { position:absolute;z-index:1;pointer-events:none;opacity:0;background:linear-gradient(90deg,rgb(48 28 12 / .5),rgb(48 28 12 / .16) 32%,transparent 68%); }
+.curl-shade-rev { background:linear-gradient(270deg,rgb(48 28 12 / .5),rgb(48 28 12 / .16) 32%,transparent 68%); }
+.curl-leaf { position:absolute;z-index:2;transform-style:preserve-3d; }
+.curl-strip { position:absolute;top:0;transform-style:preserve-3d; }
+.curl-face { position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden; }
+.curl-page { position:absolute;top:0;margin:0;border-radius:0!important; }
+.curl-back { transform:rotateY(180deg);background:#eedab3; }
+.curl-back::before { content:"";position:absolute;inset:0;background:var(--decor-tile) var(--bx,0px) 40px / 500px auto repeat; }
+@media(prefers-reduced-motion:reduce) { .curl-stage { display:none; } }
+
+/* UPDATE 01.7 — intro épica: círculo mágico, motas de luz, rayos, destello de la gema, luz de las páginas y resplandor final. */
+.gi-circle { position:absolute;left:50%;top:50%;width:min(118vmin,980px);aspect-ratio:1;margin:calc(min(118vmin,980px) / -2) 0 0 calc(min(118vmin,980px) / -2);
+  color:#f2c977;opacity:0;pointer-events:none;filter:drop-shadow(0 0 6px rgb(255 200 110 / .8)) drop-shadow(0 0 22px rgb(255 170 70 / .45)); }
+.gi-circle svg { width:100%;height:100%;display:block;overflow:visible; }
+.gi-circle-inner { color:#ffe2a4;width:min(84vmin,700px);margin:calc(min(84vmin,700px) / -2) 0 0 calc(min(84vmin,700px) / -2); }
+.gi-rays { position:absolute;left:50%;top:50%;width:min(160vmin,1500px);aspect-ratio:1;opacity:0;pointer-events:none;mix-blend-mode:screen;
+  background:repeating-conic-gradient(from 0deg,rgb(255 226 160 / 0) 0deg 4deg,rgb(255 222 150 / .55) 6.5deg,rgb(255 226 160 / 0) 9deg 15deg);
+  -webkit-mask-image:radial-gradient(closest-side,#000 8%,#0008 35%,transparent 72%);mask-image:radial-gradient(closest-side,#000 8%,#0008 35%,transparent 72%); }
+.gi-motes { position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none; }
+.gi-mote { position:absolute;left:0;top:0;width:calc(9px * var(--s,1));height:calc(9px * var(--s,1));margin:calc(-4.5px * var(--s,1));border-radius:50%;opacity:0;
+  background:radial-gradient(#fffbe8,#ffd98a 40%,rgb(255 190 90 / 0) 72%);box-shadow:0 0 12px 3px rgb(255 205 120 / .55); }
+.gi-burst { background:radial-gradient(#fff,#ffe4a8 35%,rgb(255 200 110 / 0) 70%); }
+.gi-pagelight { position:absolute;inset:-6%;z-index:5;opacity:0;pointer-events:none;mix-blend-mode:screen;
+  background:radial-gradient(ellipse at 30% 50%,rgb(255 246 214 / .95),rgb(255 214 140 / .45) 35%,transparent 70%); }
+.gi-flare { position:absolute;left:52.83%;top:48.13%;width:70%;aspect-ratio:1;opacity:0;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(90deg,transparent 0 46%,rgb(220 255 248 / .95) 50%,transparent 54% 100%),linear-gradient(0deg,transparent 0 47.5%,rgb(220 255 248 / .9) 50%,transparent 52.5% 100%),
+    radial-gradient(closest-side,rgb(200 255 245 / .9),rgb(120 230 215 / .3) 18%,transparent 40%); }
+.gi-flash { position:absolute;inset:0;opacity:0;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse at 50% 48%,rgb(255 244 214 / .95),rgb(255 210 140 / .5) 40%,transparent 75%); }
+.grimoire-intro .gi-stage { z-index:2; }
+.grimoire-intro .gi-motes { z-index:3; }
+
+.gi-bloom { position:absolute;inset:0;z-index:3;pointer-events:none; }
+.gi-bloom-light { position:absolute;left:50%;top:50%;width:190%;aspect-ratio:1;margin:-95% 0 0 -95%;opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(closest-side,rgb(255 248 220 / .95),rgb(255 222 150 / .6) 22%,rgb(255 190 90 / .22) 45%,transparent 70%); }
+.gi-sigil { position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;margin:-39% 0 0 -39%;opacity:0;color:#b8862f;
+  filter:drop-shadow(0 0 4px rgb(255 214 130 / .95)) drop-shadow(0 0 14px rgb(255 190 90 / .7)); }
+.gi-sigil svg { width:100%;height:100%;display:block; }
+.grimoire-intro .gi-rays { z-index:1; }
+
+/* ── Contraste (4 oct): superficies claras heredadas del tema antiguo pasan a oscuras ──
+   Causa: styles.css conservaba fondos celestes/blancos (#e8eeee, #eef1f2, #e5e9eb…) con texto claro encima.
+   Regla: toda superficie lleva texto con contraste ≥ 4.5:1 (probado con tools/contrast-audit.cjs). */
+.library-summary { background:#223137; border:1px solid #4b6269; color:#f1efe7; }
+.library-summary b { color:#fff3db; }
+.library-summary span { color:#d9ddd6; }
+.guide-card small, .exam-card small, .exercise-card small { background:#2b3d44; color:#f1efe7; }
+.node-index { background:#2b3d44; border:1px solid #5a747c; color:#f1efe7; }
+.lesson-node.dominado .node-index { background:#2f6b4a; border-color:#7fc79d; color:#fff; }
+.subject-dot { background:#1f2c31; border:2px solid var(--course); color:#f1efe7; }
+.academic-concept-detail a { color:#f0c777; text-decoration:underline; text-underline-offset:3px; }
+.danger, .text-btn.danger, .icon-btn.danger { color:#ffa598 !important; }
+.primary-btn:disabled { background:#3b5f4d; color:#f1efe7; opacity:1; cursor:not-allowed; }
+.secondary-btn { color:#f6f5ee; }
+
+/* Estado vacío (Practicar → Ejercicios) */
+.empty-state { text-align:left; display:flex; flex-direction:column; align-items:flex-start; gap:14px; max-width:640px; margin-block:12px;
+  padding:clamp(22px,4vw,36px); border:1px solid #4b6269; border-radius:12px;
+  background:linear-gradient(160deg,#1b2a2f,#141d21); color:#f1efe7; box-shadow:0 12px 32px rgb(0 0 0 / .28); }
+.empty-state h2 { margin:0; font-size:clamp(1.5rem,4vw,2rem); color:#fff3db; }
+.empty-state p { margin:0; color:#d9ddd6; line-height:1.6; max-width:52ch; }
+.empty-state .eyebrow { color:#e8c06a; }
+.empty-state-mark { display:grid; place-items:center; width:52px; height:52px; border-radius:50%;
+  border:1px solid #e8c06a; color:#e8c06a; font-size:1.4rem; background:rgb(232 192 106 / .08); }
+
+/* Grimorio: tintas más oscuras sobre el papel beige (contraste ≥ 4.5:1) */
+.course-plate figcaption b { color:#46562f; }
+.course-opening-number { color:#74482a; }
+.grimoire-frontispiece>.eyebrow { color:#6a4a31; }
+.folio-footer { color:#6a4a2c; }
+/* 5 oct 2026 — refugio en pixel art: el navegador agranda el arte sin difuminar (píxeles nítidos). */
+.home-art-plane[data-scene-id="refugio-pixel"] { image-rendering:crisp-edges;image-rendering:pixelated; }
+/* 11 oct 2026 — refugio pixel: la sala con 4 luces pintadas en Python; se funden con la hora (--w-*) y las nubes reales (--w-cloud). */
+.home-px-light { image-rendering:crisp-edges;image-rendering:pixelated; }
+.home-px-nublado { background-image:url('../assets/home-scenes/refugio-pixel-nublado.png');opacity:calc(var(--w-cloud,0) * (var(--w-day,1) + var(--w-dawn,0))); }
+.home-px-tarde { background-image:url('../assets/home-scenes/refugio-pixel-tarde.png');opacity:calc(var(--w-dusk,0) + var(--w-dawn,0) * .7); }
+.home-px-noche { background-image:url('../assets/home-scenes/refugio-pixel-noche.png');opacity:var(--w-night,0); }
+@media (max-width:700px) {
+  .home-clock { --px:2;top:8px;width:calc(100% - 20px);grid-template-columns:1fr auto;gap:6px 10px;padding:0 4px 4px; }
+  .home-clock .hc-timer { grid-column:1/-1;grid-row:2; }
+  .home-clock .hc-greet,.home-clock .hc-label { display:none; }
+  .home-clock .hc-hour { height:21px; }
+  .home-clock .hc-digits { height:21px; }
+  .home-clock .hc-btn { min-height:44px; }
+  .home-clock .hc-meta { gap:6px;justify-content:flex-start; }
+  
+}
+.hc-pendulum { left:50%;bottom:calc(-30*var(--px)*1px);margin-left:calc(-12*var(--px)*1px);width:calc(24*var(--px)*1px);height:calc(30*var(--px)*1px);background-image:url('../assets/home-scenes/reloj-pendulo.png');background-size:calc(192*var(--px)*1px) 100%;animation:hcSheetPend 4s steps(8) infinite; }
+.home-clock.is-running .hc-pendulum { animation-duration:2s; }
+.hc-flask { right:calc(26*var(--px)*1px);bottom:calc(-9*var(--px)*1px);width:calc(12*var(--px)*1px);height:calc(16*var(--px)*1px);background-image:url('../assets/home-scenes/reloj-matraz.png');background-size:calc(72*var(--px)*1px) 100%;opacity:0;transform:scale(.4) translateY(10px);transform-origin:50% 100%;transition:opacity .5s,transform .5s cubic-bezier(.3,1.5,.5,1); }
+.home-clock.is-running .hc-flask { opacity:1;transform:none;animation:hcSheetFlask 1s steps(6) infinite; }
+.hc-spark { position:fixed;z-index:60;width:4px;height:4px;margin:-2px;background:#fbe08a;box-shadow:0 0 0 1px #8a5c20;pointer-events:none;image-rendering:pixelated;animation:hcSpark .85s cubic-bezier(.2,.7,.3,1) forwards; }
+.hc-spark:nth-child(3n) { background:#9ce8f0;box-shadow:0 0 0 1px #1e7090; }
+.hc-spark:nth-child(4n) { background:#b2cf5c;box-shadow:0 0 0 1px #2a5228; }
+@keyframes hcSheetPend { to { background-position-x:calc(-192*var(--px)*1px); } }
+@keyframes hcSheetFlask { to { background-position-x:calc(-72*var(--px)*1px); } }
+@keyframes hcSpark { 0% { opacity:1;transform:translate(0,0) scale(1); } 100% { opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4); } }
