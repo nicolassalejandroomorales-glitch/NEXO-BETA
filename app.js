@@ -83,15 +83,15 @@
     ':': ['0','1','0','0','1','0','0']
   };
   function pixelDigits(value) {
-    let x = 0, blocks = '';
+    let x = 0, d = '';
     for (const glyph of String(value)) {
       const rows = pixelGlyphs[glyph] || pixelGlyphs['0'];
-      rows.forEach((row, y) => [...row].forEach((cell, dx) => { if (cell === '1') blocks += `<rect x="${x + dx}" y="${y}" width="1" height="1"/>`; }));
+      rows.forEach((row, y) => { for (const m of row.matchAll(/1+/g)) d += `M${x + m.index} ${y}h${m[0].length}v1h-${m[0].length}z`; });
       x += rows[0].length + 1;
     }
-    return `<svg class="pixel-digits" viewBox="0 0 ${Math.max(1, x - 1)} 7" aria-hidden="true" focusable="false" shape-rendering="crispEdges">${blocks}</svg>`;
+    return `<svg class="pixel-digits" viewBox="0 0 ${Math.max(1, x - 1)} 7" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><path d="${d}"/></svg>`;
   }
-  const subjectFor = id => SUBJECTS.find(subject => subject.id === id) || SUBJECTS[0];
+  const subjectFor = id => id === 'personal' ? { id, name: 'Vida personal y trabajo', short: 'VIDA', color: '#92b9a0', peps: [] } : SUBJECTS.find(subject => subject.id === id) || SUBJECTS[0];
   const allLessons = subjectId => subjectFor(subjectId).peps.flatMap(pep => pep.lessons);
   const lessonSubject = id => subjectFor(LESSONS[id]?.subject);
   const sessionSeconds = session => Number(session.seconds) || Number(session.minutes || 0) * 60;
@@ -258,7 +258,7 @@
       ...item,
       id: item.id || uid('event'),
       title: String(item.title || 'Evaluación'),
-      subject: subjectIds.has(item.subject) ? item.subject : 'organica',
+      subject: item.subject === 'personal' ? 'personal' : subjectIds.has(item.subject) ? item.subject : 'organica',
       type: String(item.type || 'Prueba'),
       time: /^\d{2}:\d{2}$/.test(String(item.time || '')) ? item.time : '',
       priority: clamp(Number(item.priority) || (['exam','Prueba','control'].includes(item.type) ? 3 : 2),1,3),
@@ -428,7 +428,7 @@
     const level = Math.floor(state.xp / 100) + 1;
     document.querySelectorAll('.level-chip').forEach(node => { node.textContent = `Nv. ${level}`; });
     const coins = document.querySelector('#railCoins'); if (coins) coins.textContent = Math.floor(state.coins);
-    const headerCoins = document.querySelector('#headerCoins'); if (headerCoins) headerCoins.textContent = Math.floor(state.coins);
+    const headerCoins = document.querySelector('#headerCoins'); if (headerCoins && headerCoins.dataset.n !== String(Math.floor(state.coins))) { headerCoins.dataset.n = String(Math.floor(state.coins)); headerCoins.innerHTML = pixelText(headerCoins.dataset.n, { shadow: true }); }
     document.body.classList.toggle('reduce-motion', !state.settings.motion);
     window.NexoPerformance?.apply(state.settings);
     window.NexoAudio?.configure(state.settings);
@@ -571,7 +571,14 @@
       if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
     });
   }
+  // Transición entre secciones (portal que se abre desde donde tocaste): ver NexoPixelUI.transition. El grimorio, el tutorial y las clases tienen la suya.
   function renderRoute(moveFocus = true) {
+    const from = app.dataset.renderedRoute || '', to = parseRoute().join('/');
+    const own = route => ['tutorial', 'lesson'].includes(route.split('/')[0]) || (route.split('/')[0] === 'learn' && route.split('/')[1] === 'course');
+    if (!from || from === to || own(from) || own(to) || !window.NexoPixelUI) return paintRoute(moveFocus);
+    window.NexoPixelUI.transition(() => paintRoute(moveFocus));
+  }
+  function paintRoute(moveFocus) {
     const previousRoute=app.dataset.renderedRoute;
     window.NexoAnimation?.prepare(app);
     if (document.body.classList.contains('in-classroom')) window.NexoAmbientTime?.stopPreview?.(); // la ventana de la torre puede haber cambiado la hora
@@ -583,9 +590,6 @@
     window.NexoPet?.cleanup();
     const route = parseRoute();
     const routeChanged=previousRoute!==route.join('/');
-    const roomFamily=parts=>['subject','lesson','subjects','library','knowledge','inspector','practice','reviews','rescue','study'].includes(parts[0])?'learn':
-        ['mascot','stats','settings','history'].includes(parts[0])?'profile':parts[0];
-    app.dataset.chapterTransition=previousRoute&&roomFamily(previousRoute.split('/'))!==roomFamily(route)?'1':'0';
     if(routeChanged)window.NexoActiveStudy?.stop();
     if (routeChanged) {
       if (route[0]==='lesson') cloud.track('lesson_started',{lesson_id:route[1]});
@@ -607,7 +611,7 @@
           google: () => cloud.signInWithGoogle({ volver: 'home' }),
           guest: () => { try { localStorage.setItem(ENTRADA_KEY, '1'); } catch (_) {} routeTo('home'); }
         }); };
-        if (window.NexoEntrada) go(); else { const sc = document.createElement('script'); sc.src = 'cuentas/entrada.js?v=1'; sc.onload = go; document.head.append(sc); }
+        if (window.NexoEntrada) go(); else { const sc = document.createElement('script'); sc.src = 'cuentas/entrada.js?v=2'; sc.onload = go; document.head.append(sc); }
       },
       learn: () => route[1] === 'course'
         ? (route[3] === 'lesson' ? (LESSONS[route[4]]?.subject===route[2] ? renderLesson(route[4]) : renderSubjects())
@@ -625,7 +629,7 @@
       lesson: () => renderLesson(route[1]),
       practice: () => renderPractice(route[1] || 'exercises', route[2]),
       planner: () => window.NexoEstudio ? window.NexoEstudio.render(app, route[1], orgBridge()) : renderPlanner(route[1] || 'calendar'),
-      timer: renderTimer,
+      timer: renderHome,
       stats: renderStats,
       history: () => window.NexoHistory.render(app,cloud,state),
       library: renderAcademicLibrary,
@@ -653,7 +657,7 @@
           finish: () => { state.tutorial.status = 'done'; saveState({ backup: false }); withAvisos(a => { state.tutorial.news = Math.max(state.tutorial.news || 0, a.VERSION); saveState({ backup: false }); }); }
         };
         const go = () => { if (parseRoute()[0] === 'tutorial') window.NexoTutorial.render(app, { mode, api: mode === 'test' ? null : api, sound: () => !!state.settings?.sound, exit: () => routeTo('home') }); };
-        if (window.NexoTutorial) go(); else { const sc = document.createElement('script'); sc.src = 'tutorial/tutorial.js?v=5'; sc.onload = go; document.head.append(sc); }
+        if (window.NexoTutorial) go(); else { const sc = document.createElement('script'); sc.src = 'tutorial/tutorial.js?v=9'; sc.onload = go; document.head.append(sc); }
       }
     };
     try { (renderers[route[0]] || renderHome)(); app.dataset.renderedRoute = route.join('/'); }
@@ -735,31 +739,31 @@
         </div>
         <div class="refuge-signs">
           <div class="signs-beam" aria-hidden="true"></div>
-          <section class="sign sign-pruebas evaluation-board" aria-labelledby="priorityTitle">
-            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i>
+          <section class="sign sign-pruebas evaluation-board pu-panel" aria-labelledby="priorityTitle">
+            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i><i class="pu-ivy sign-ivy-l" aria-hidden="true"></i>
             <h2 class="sign-title" id="priorityTitle">${pixelText('Próximas pruebas')}</h2>
-            <div class="sign-paper">
-              ${evaluations.length ? `<ol class="evaluation-notes">${evaluations.map((item,index) => {const course=subjectFor(item.event.subject);return `<li class="evaluation-note ${index===0?'next-evaluation':''}"><div><span>${esc(course.name)}</span><time datetime="${esc(item.event.date)}">${formatDate(item.event.date)}</time></div><h3>${esc(item.event.title)}</h3><p>${item.reasons.map(esc).join(' · ')}</p>${item.event.dateNote||item.event.weekdayUncertain?`<small>${esc(item.event.dateNote||'Fecha por confirmar con cátedra.')}</small>`:''}<button class="paper-link" data-route="planner" data-route-sub="calendar">Ver evaluación en Bitácora →</button></li>`;}).join('')}</ol>` : '<p class="paper-empty">Sin pruebas pendientes en tu calendario.</p>'}
+            <div class="sign-paper pu-paper"><i class="pu-seal pu-seal-1" aria-hidden="true"></i>
+              ${evaluations.length ? `<ol class="evaluation-notes">${evaluations.map((item,index) => {const course=subjectFor(item.event.subject);return `<li class="evaluation-note ${index===0?'next-evaluation':''}"><div><span>${esc(course.name)}</span><time datetime="${esc(item.event.date)}">${formatDate(item.event.date)}</time></div><h3>${pixelText(esc(item.event.title),{shadow:false})}</h3><p>${item.reasons.map(esc).join(' · ')}</p>${item.event.dateNote||item.event.weekdayUncertain?`<small>${esc(item.event.dateNote||'Fecha por confirmar con cátedra.')}</small>`:''}<button class="paper-link" data-route="planner" data-route-sub="calendar">Ver evaluación en Bitácora →</button></li>`;}).join('')}</ol>` : '<p class="paper-empty">Sin pruebas pendientes en tu calendario.</p>'}
             </div>
-            <button class="wood-link sign-link" data-route="planner" data-route-sub="calendar">Abrir mi calendario →</button>
+            <button class="pu-btn sign-link" data-route="planner" data-route-sub="calendar">${pixelText('Abrir mi calendario →',{shadow:false})}</button>
           </section>
-          <section class="sign sign-dia day-paper" aria-labelledby="dayTitle">
-            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i>
+          <section class="sign sign-dia day-paper pu-panel" aria-labelledby="dayTitle">
+            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i><i class="pu-ivy pu-ivy-b sign-ivy-r" aria-hidden="true"></i>
             <h2 class="sign-title" id="dayTitle">${pixelText('Tu día')}</h2>
-            <div class="sign-paper">
-              <div class="day-goal"><span>Meta diaria</span><strong>${studied} / ${goal} min</strong><div class="goal-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${Math.min(studied,goal)}" aria-label="${studied} de ${goal} minutos estudiados hoy"><i style="width:${Math.min(100,Math.round(100*studied/Math.max(1,goal)))}%"></i></div></div>
-              <ul class="day-agenda">${todayEvents.length ? todayEvents.slice(0,3).map(event=>`<li><span aria-hidden="true">◇</span><div><b>${esc(event.title)}</b><small>${esc(subjectFor(event.subject).name)}${event.time?` · ${esc(event.time)}`:''}</small></div></li>`).join('') : '<li><span aria-hidden="true">☼</span><div><b>Sin compromisos hoy</b><small>Tu calendario está libre para estudiar a tu ritmo.</small></div></li>'}</ul>
+            <div class="sign-paper pu-paper"><i class="pu-seal pu-seal-2" aria-hidden="true"></i>
+              <div class="day-goal"><span>${pixelText('Meta',{shadow:false})}</span><strong>${pixelText(`${studied} / ${goal} min`,{shadow:false})}</strong><div class="goal-bar pu-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${Math.min(studied,goal)}" aria-label="${studied} de ${goal} minutos estudiados hoy"><i style="width:${Math.min(100,Math.round(100*studied/Math.max(1,goal)))}%"></i></div></div>
+              <ul class="day-agenda">${todayEvents.length ? todayEvents.slice(0,3).map(event=>`<li><span aria-hidden="true">◇</span><div><b>${pixelText(event.title,{shadow:false})}</b><small>${esc(subjectFor(event.subject).name)}${event.time?` · ${esc(event.time)}`:''}</small></div></li>`).join('') : '<li><span aria-hidden="true">☼</span><div><b>Sin compromisos hoy</b><small>Tu calendario está libre para estudiar a tu ritmo.</small></div></li>'}</ul>
             </div>
-            <button class="wood-link sign-link" data-route="reviews">${dueReviews().length} repasos pendientes →</button>
+            <button class="pu-btn sign-link" data-route="reviews">${pixelText(`${dueReviews().length} repasos pendientes →`,{shadow:false})}</button>
           </section>
-          <section class="sign sign-continuar continue-volume" aria-labelledby="continueTitle">
-            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i>
+          <section class="sign sign-continuar continue-volume pu-panel" aria-labelledby="continueTitle">
+            <i class="sign-chain sign-chain-l" aria-hidden="true"></i><i class="sign-chain sign-chain-r" aria-hidden="true"></i><i class="pu-ivy sign-ivy-l" aria-hidden="true"></i>
             <h2 class="sign-title" id="continueTitle">${pixelText('Continuar')}</h2>
-            <div class="sign-paper">
-              <p class="continue-where"><b>${esc(continuingSubject.name)}</b><span>${esc(pep?.name||'Selecciona una evaluación')}</span></p>
+            <div class="sign-paper pu-paper"><i class="pu-seal pu-seal-3" aria-hidden="true"></i>
+              <p class="continue-where"><b>${pixelText(continuingSubject.name,{shadow:false})}</b><span>${esc(pep?.name||'Selecciona una evaluación')}</span></p>
               ${saved?`<button class="paper-link saved-lesson" data-open-lesson="${state.lessonSession.id}">Retomar clase guardada: ${esc(saved.title)} →</button>`:''}
             </div>
-            <div class="volume-actions"><button class="primary-btn" data-grimoire-route="learn/course/${continuingSubject.id}/evaluation/pep-${pepIndex+1}">Abrir mapa de preparación →</button><button class="wood-link sign-link" data-route="learn">Elegir otro ramo</button></div>
+            <div class="volume-actions"><button class="pu-btn pu-btn-wide" data-grimoire-route="learn/course/${continuingSubject.id}/evaluation/pep-${pepIndex+1}">${pixelText('Preparar prueba →',{shadow:false})}</button><button class="pu-btn sign-link" data-route="learn">${pixelText('Elegir otro ramo',{shadow:false})}</button></div>
           </section>
         </div>
         <footer class="refuge-caption">Un lugar donde el conocimiento florece.</footer>
@@ -775,17 +779,26 @@
   const dayMoment = hour => hour < 6 ? 'madrugada' : hour < 12 ? 'mañana' : hour < 19 ? 'tarde' : 'noche';
   const GREETINGS = { madrugada: 'Noche larga', mañana: 'Buen día', tarde: 'Buena tarde', noche: 'Buena noche' };
   const pixelText = (text, options) => window.NexoPixelText.render(text, options);
+  // Tamaño del reloj a gusto: 1 mini · 2 normal · 3 grande · 4 enorme (píxeles enteros, ver update01.css), se recuerda en este dispositivo (no viaja con la cuenta).
+  const CLOCK_SCALES = [1, 2, 3, 4];
+  const clockScale = () => { try { const v = Number(localStorage.getItem('nexo.clockSize')); return CLOCK_SCALES.includes(v) ? v : 2; } catch (_) { return 1; } };
+  function resizeClock(step) {
+    const next = CLOCK_SCALES[Math.max(0, Math.min(CLOCK_SCALES.length - 1, CLOCK_SCALES.indexOf(clockScale()) + step))];
+    try { localStorage.setItem('nexo.clockSize', String(next)); } catch (_) { /* sin almacenamiento: vale solo hasta recargar */ }
+    if (document.querySelector('.home-clock')) document.querySelector('.home-clock').dataset.cs = next;
+    document.querySelectorAll('[data-clock-size]').forEach(button => { button.disabled = button.dataset.clockSize === '-1' ? next === CLOCK_SCALES[0] : next === CLOCK_SCALES[CLOCK_SCALES.length - 1]; });
+  }
   function homeClockMarkup(nextEvaluation, studiedMinutes) {
     const timer = state.timer, running = timer.status === 'running', paused = timer.status === 'paused';
     const days = nextEvaluation ? daysBetween(todayKey(), nextEvaluation.event.date) : null;
     const countdown = days === null ? 'Sin pruebas a la vista' : `${nextEvaluation.event.title} · ${days <= 0 ? 'hoy' : days === 1 ? 'mañana' : `${days} días`}`;
     const pt = (text, shadow = false) => pixelText(text, { shadow });
-    return `<aside class="home-clock ${running ? 'is-running' : ''}" aria-label="Reloj de estudio">
+    return `<aside class="home-clock ${running ? 'is-running' : ''}" data-cs="${clockScale()}" aria-label="Reloj de estudio">
       <i class="hc-gear" aria-hidden="true"></i><i class="hc-orb" aria-hidden="true"></i><i class="hc-leaf hc-leaf-l" aria-hidden="true"></i><i class="hc-leaf hc-leaf-r" aria-hidden="true"></i><i class="hc-pendulum" aria-hidden="true"></i><i class="hc-flask" aria-hidden="true"></i>
       <div class="hc-now"><div class="hc-hour" data-hc-time role="text"></div><div class="hc-greet" data-hc-moment></div></div>
       <div class="hc-timer"><div class="hc-label">${pt(`${running ? 'Estudiando' : paused ? 'En pausa' : 'Cronómetro'} · ${subjectFor(timer.subject).short}`)}</div><div class="hc-digits" id="homeTimer" role="timer">${pixelDigits(formatClock(timerElapsedMs()))}</div></div>
-      <div class="hc-controls">${running ? `<button class="hc-btn" data-action="timer-pause" aria-label="Pausar">${pt('Pausar')}</button>` : `<button class="hc-btn hc-primary" data-action="timer-start" aria-label="${paused ? 'Seguir' : 'Estudiar'}">${pt(paused ? 'Seguir' : 'Estudiar')}</button>`}${timerElapsedMs() >= 1000 ? `<button class="hc-btn" data-action="timer-finish" aria-label="Terminar">${pt('Terminar')}</button>` : ''}</div>
-      <div class="hc-meta"><span class="hc-plate">${pt(`Hoy · ${studiedMinutes} min`)}</span><span class="hc-plate hc-plate-exam">${pt(countdown)}</span></div>
+      <div class="hc-controls">${running ? `<button class="hc-btn pu-btn" data-action="timer-pause" aria-label="Pausar">${pt('Pausar')}</button>` : `<button class="hc-btn hc-primary pu-btn" data-action="timer-start" aria-label="${paused ? 'Seguir' : 'Estudiar'}">${pt(paused ? 'Seguir' : 'Estudiar')}</button>`}${timerElapsedMs() >= 1000 ? `<button class="hc-btn pu-btn" data-action="timer-finish" aria-label="Terminar">${pt('Terminar')}</button>` : ''}</div>
+      <div class="hc-meta"><span class="hc-plate">${pt(`Hoy · ${studiedMinutes} min`)}</span><span class="hc-plate hc-plate-exam">${pt(countdown)}</span><span class="hc-size" role="group" aria-label="Tamaño del reloj"><button class="pu-btn" data-clock-size="-1" aria-label="Achicar reloj" ${clockScale() === CLOCK_SCALES[0] ? 'disabled' : ''}>${pt('-')}</button><button class="pu-btn" data-clock-size="1" aria-label="Agrandar reloj" ${clockScale() === CLOCK_SCALES[CLOCK_SCALES.length - 1] ? 'disabled' : ''}>${pt('+')}</button></span></div>
     </aside>`;
   }
   // Chispas de latón, cristal y hoja al terminar una sesión: viven en el body porque el Inicio se vuelve a pintar al guardar.
@@ -802,6 +815,7 @@
     setTimeout(() => made.forEach(spark => spark.remove()), 1100);
   }
   function startHomeClock() {
+    clearInterval(timerTicker);
     const tick = () => {
       const now = new Date(), time = document.querySelector('[data-hc-time]');
       if (!time) return;
@@ -810,30 +824,11 @@
       const greet = document.querySelector('[data-hc-moment]');
       if (greet.dataset.m !== moment) { greet.dataset.m = moment; greet.innerHTML = pixelText(GREETINGS[moment], { shadow: false }); }
       const digits = document.querySelector('#homeTimer');
-      if (digits && state.timer.status === 'running') digits.innerHTML = pixelDigits(formatClock(timerElapsedMs()));
+      const elapsed = formatClock(timerElapsedMs());
+      if (digits && state.timer.status === 'running' && digits.dataset.t !== elapsed) { digits.dataset.t = elapsed; digits.innerHTML = pixelDigits(elapsed); digits.setAttribute('aria-label', elapsed); }
     };
     tick();
-    timerTicker = setInterval(tick, 1000);
-  }
-
-  function renderTimer() {
-    const running = state.timer.status === 'running';
-    const paused = state.timer.status === 'paused';
-    app.innerHTML = `<section class="page timer-page-v10 storybook-v10">
-      <article class="timer-workbench-v10">
-        <div class="timer-head-v10"><span>${running ? 'SESIÓN EN CURSO' : paused ? 'SESIÓN EN PAUSA' : 'LISTO PARA COMENZAR'}</span><i class="live-pill ${state.timer.status}">${running ? 'EN CURSO' : paused ? 'PAUSADO' : 'LISTO'}</i></div>
-        <label class="timer-subject-v10">Ramo<select id="timerSubject" ${running ? 'disabled' : ''}>${SUBJECTS.map(s => `<option value="${s.id}" ${state.timer.subject === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>
-        <div class="clock clock-v10" id="clock" role="timer" aria-label="${formatClock(timerElapsedMs())}">${pixelDigits(formatClock(timerElapsedMs()))}</div>
-        <div class="timer-tiers" aria-label="Átomos por sesión">${[[5,3],[15,15],[30,25],[60,100],[120,250]].map(([min,atoms]) => `<span><b>${min} min</b><small>${atoms} átomos</small></span>`).join('')}</div>
-        <div class="button-row timer-controls-v10">
-          ${running ? '<button class="secondary-btn" data-action="timer-pause">Pausar</button>' : `<button class="primary-story-v10" data-action="timer-start">${paused ? 'Continuar' : 'Iniciar estudio'}</button>`}
-          <button class="secondary-btn" data-action="timer-finish" ${timerElapsedMs() < 1000 ? 'disabled' : ''}>Finalizar y guardar</button>
-          <button class="text-btn danger" data-action="timer-reset" ${timerElapsedMs() < 1000 ? 'disabled' : ''}>Descartar</button>
-        </div>
-        ${state.inventory.includes('focus-mode') ? `<label class="toggle"><input type="checkbox" data-setting="focusMode" ${state.settings.focusMode ? 'checked' : ''}><span>Modo sin distracciones</span></label>` : ''}
-      </article>
-    </section>`;
-    startClockTicker();
+    timerTicker = setInterval(tick, 250); // cada cuarto de segundo para que los segundos cambien justo en su momento; solo se repinta si cambió el texto
   }
 
   function lessonQuickRow(id) {
@@ -844,16 +839,6 @@
     const subject = subjectFor(event.subject), diff = daysBetween(todayKey(), event.date);
     return `<div class="compact-row static"><span class="date-box"><b>${parseDay(event.date).getDate()}</b><small>${new Intl.DateTimeFormat('es-CL', { month: 'short' }).format(parseDay(event.date))}</small></span><div><b>${esc(event.title)}</b><small>${subject.name} · ${diff < 0 ? 'pasó' : diff === 0 ? 'hoy' : `faltan ${diff} días`}</small></div></div>`;
   }
-
-  function startClockTicker() {
-    if (state.timer.status !== 'running') return;
-    timerTicker = setInterval(() => {
-      const elapsed = timerElapsedMs(), clock = document.querySelector('#clock'); if (clock) { clock.innerHTML = pixelDigits(formatClock(elapsed)); clock.setAttribute('aria-label', formatClock(elapsed)); }
-      document.querySelectorAll('[data-action="timer-finish"],[data-action="timer-reset"]').forEach(button => { button.disabled = elapsed < 1000; });
-    }, 1000);
-  }
-
-
 
   function grimoireShell(subject, title, subtitle, content, aside, pageLabel) {
     const courses = SUBJECTS.map(item => `<button class="grimoire-tab ${subject?.id===item.id?'active':''}" data-grimoire-route="learn/course/${item.id}" ${subject?.id===item.id?'aria-current="page"':''} title="${esc(item.name)}"><span aria-hidden="true">${window.NexoRooms.courses[item.id]?.symbol||item.icon}</span><span>${esc(item.short)}</span></button>`).join('');
@@ -944,12 +929,13 @@
   let mascotAcademicSubscribed=false;
   function loadAcademicFoundation() {
     if(!academicFoundation)academicFoundation=['model','graph','diagnosis','knowledge','ranks','classifiers','sources','reviews','structured','engine','library','inspector','explorer','rescue']
-      .reduce((promise,name)=>promise.then(()=>window.NexoLoader.script(`./academic/${name}.js?v=a2a8bd73`)),Promise.resolve())
+      .reduce((promise,name)=>promise.then(()=>window.NexoLoader.script(`./academic/${name}.js?v=e3f63c3f`)),Promise.resolve())
       .then(()=>{if(!mascotAcademicSubscribed){window.NexoAcademicEngine.subscribe(event=>
         window.NexoMascotController.react(event,app));mascotAcademicSubscribed=true;}})
       .catch(error=>{academicFoundation=null;throw error;});
     return academicFoundation;
   }
+  window.NexoAcademicLoad=loadAcademicFoundation;
   function renderAcademicLibrary() {
     if(window.NexoAcademicLibrary)return window.NexoAcademicLibrary.render(app,{
       getState:()=>state,saveState,showToast,track:(...args)=>cloud.track(...args)});
@@ -1011,11 +997,11 @@
     const promise = Promise.resolve(window.NexoClassCatalog || window.NexoLoader.script('./classes/catalog.js?v=8dec702d')).then(() => {
       const file = window.NexoClassCatalog?.[id];
       if (!file) return false;
-      return Promise.all([window.NexoLoader.style('./classes/classroom.css?v=7f1c7bf7'), window.NexoLoader.script('./classes/tower-art.js?v=9099c2df').then(() => window.NexoLoader.script('./classes/player.js?v=4242bf88')),
+      return Promise.all([window.NexoLoader.style('./classes/classroom.css?v=7f1c7bf7'), window.NexoLoader.script('./classes/tower-art.js?v=9099c2df').then(() => window.NexoLoader.script('./classes/player.js?v=5e381d35')),
         window.NexoLoader.script('./classes/willow-tower.js?v=09c21b87').catch(() => null), // Torre del Sauce (etapa 10); sin ella, quedan las hojas en lista
         window.NexoLoader.script(`./classes/${file}?v=18`),
         // Motor de evidencia y repaso espaciado (FSRS); si no cargan, la clase funciona igual sin agendar repasos.
-        window.NexoLoader.script('./classes/evidence.js?v=308f7a40'), window.NexoLoader.script('./classes/molecule.js?v=b3b2e5aa'), window.NexoLoader.script('./classes/editor.js?v=df0be94e'), window.NexoLoader.script('./academic/reviews.js?v=0273ea6c').catch(() => null)])
+        window.NexoLoader.script('./classes/evidence.js?v=308f7a40'), window.NexoLoader.script('./classes/molecule.js?v=b3b2e5aa'), window.NexoLoader.script('./classes/editor.js?v=df0be94e'), window.NexoLoader.script('./academic/class-bridge.js?v=a668cb26').catch(() => null), window.NexoLoader.script('./academic/reviews.js?v=0273ea6c').catch(() => null)])
         .then(() => Promise.all([window.NexoLoader.script(`./classes/slides/${id}.js?v=268941af`).catch(() => null), // diapositivas reales, si ya se convirtieron
           window.NexoLoader.script(`./classes/${id}-gen.js?v=00c1b5a9`).catch(() => null)])) // generadores de ejercicios (etapa 8), si la clase los tiene
         .then(() => true);
@@ -1226,7 +1212,7 @@
 
   function renderHub(tab = 'timer') {
     const active = ['timer', 'calendar', 'grades'].includes(tab) ? tab : 'timer';
-    if (active === 'timer') renderTimer();
+    if (active === 'timer') renderHome();
     else renderPlanner(active, true);
     const page = app.querySelector('.page');
     page.classList.add('rpg-inner');
@@ -1453,12 +1439,22 @@
   function comingSoon(eyebrow,id,title,text) {
     return `<section class="empty-state" aria-labelledby="${id}"><span class="empty-state-mark" aria-hidden="true">✧</span><p class="eyebrow">${eyebrow}</p><h2 id="${id}">${title}</h2><p>${text}</p></section>`;
   }
+  // Cofres por hitos (docs/economia/SPEC.md): jefes vencidos del juego, guías completadas y rachas.
+  function awardHitos() {
+    let bosses = [];
+    try { const rec = JSON.parse(localStorage.getItem('nexo-pep1-campana') || '{}').record || {}; bosses = Object.keys(rec); } catch (_) {}
+    const guides = Object.keys(state.guides).filter(id => state.guides[id]?.completed);
+    const got = window.NexoTienda.claimMilestones(state, { bosses, guides, streak: streak() });
+    if (got.length) { saveState({ backup: false }); showToast(got.length === 1 ? 'Ganaste un cofre por tu logro ✦' : 'Ganaste ' + got.length + ' cofres por tus logros ✦'); }
+  }
   function renderShop() {
-    petBind();
-    app.innerHTML=`<section class="page forge-page"><p class="eyebrow">MERCADO ARCANO</p><h2>Tienda de cofres</h2>
-      <div id="shopTop"></div>
-      <div style="display:flex;justify-content:center;background:radial-gradient(circle at 50% 40%,#f3e6c8,#d8c39a);border-radius:12px;margin:10px 0"><canvas id="petShopPreview" width="40" height="44" style="width:160px;height:176px;image-rendering:pixelated" aria-label="Vista previa de tu compañero"></canvas></div>
-      <div id="petShop" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px"></div></section>`+
+    petBind(); awardHitos();
+    app.innerHTML=`<section class="page forge-page tienda-page"><div class="tienda-head"><div><p class="eyebrow">MERCADO ARCANO</p><h2 aria-label="Tienda del alquimista">${window.NexoPixelText?window.NexoPixelText.render('Tienda del alquimista'):'Tienda del alquimista'}</h2></div><div class="tienda-wallet" id="shopWallet"></div></div>
+      <div class="tienda-mesa"><div class="pu-panel"><div class="tienda-cofre"><img id="shopChest" src="./assets/tienda/cofre-cerrado.png" alt="Cofre del alquimista"><div id="shopTop"></div></div></div>
+        <div class="pu-panel"><div class="pu-paper tienda-pet"><canvas id="petShopPreview" width="40" height="44" aria-label="Vista previa de tu compañero"></canvas><small>Prueba un accesorio y mira cómo le queda a tu compañero.</small></div></div></div>
+      <div class="tienda-tipos" id="shopTypes"></div>
+      <div class="pu-paper tienda-odds" id="shopOdds"></div>
+      <div class="tienda-estantes" id="petShop"></div></section>`+
       `<details class="forge-challenges"><summary>Desafíos de estudio</summary>${renderChallenges()}</details>`;
     window.NexoPet?.wireShop(app);
   }
@@ -1566,6 +1562,7 @@
     cloud.track('study_session_started',{subject_id:state.timer.subject});
   }
   function timerPause() {
+    if (parseRoute()[0] === 'home') window.NexoPet?.celebrate(0);
     if (state.timer.status !== 'running') return;
     if (cloud.authenticated && state.timer.serverId) cloud.pauseTimer(state.timer.serverId).catch(() => showToast('Pausa guardada aquí; revisa la conexión.'));
     state.timer.elapsedBeforeMs = timerElapsedMs(); state.timer.startedAt = null; state.timer.status = 'paused'; saveState({ backup: false }); renderRoute(false);
@@ -1589,7 +1586,7 @@
         });
         state.xp += sessionXp(confirmedSeconds);
       }
-      if (!cloud.authenticated) state.coins += rewardValue;
+      if (!cloud.authenticated) rewardValue = window.NexoTienda.earn(state, 'sesion', todayKey(), rewardValue);
       state.timer = { status: 'idle', subject: state.timer.subject, startedAt: null, elapsedBeforeMs: 0 };
       saveState(); playSuccess(); renderRoute(false); window.NexoPet?.celebrate(rewardValue);
       showToast(`Sesión guardada · ${formatClock(confirmedSeconds * 1000)}${rewardValue ? ` · +${rewardValue} átomos` : ' · sin átomos pendientes'}`);
@@ -1618,7 +1615,7 @@
     progress.firstCorrect = Boolean(progress.firstCorrect || (firstAttempt && progress.correct && !progress.hintUsed));
     progress.lastAttempt = todayKey(); progress.solvedAt = progress.correct ? todayKey() : progress.solvedAt;
     if (!progress.correct) addPracticeError(item, item.choices[progress.selected], item.lookFor);
-    else if (!hadCorrect) { if (!cloud.authenticated) state.coins += firstAttempt && !progress.hintUsed ? 4 : 2; state.xp += 5; progress.rewarded = true; playSuccess(); }
+    else if (!hadCorrect) { if (!cloud.authenticated) window.NexoTienda.earn(state, firstAttempt && !progress.hintUsed ? 'sinAyuda' : 'conAyuda', todayKey()); state.xp += 5; progress.rewarded = true; playSuccess(); }
     state.practice[item.id] = progress; saveState(); renderRoute(false);
     cloud.track(progress.correct?'exercise_attempted':'exercise_failed',{exercise_id:item.id,correct:progress.correct,attempt:progress.attempts});
   }
@@ -1629,7 +1626,7 @@
     progress.attempts += 1; progress.checked = true; progress.textScore = score; progress.correct = score >= 65;
     progress.firstCorrect = Boolean(progress.firstCorrect || (firstAttempt && progress.correct && !progress.hintUsed)); progress.lastAttempt = todayKey();
     if (!progress.correct) addPracticeError(item, `Respuesta abierta ${score}/100`, `Incluye la cadena ${item.lookFor} y conecta los pasos con “porque”, “provoca” o “por eso”.`);
-    else if (!hadCorrect) { if (!cloud.authenticated) state.coins += firstAttempt && !progress.hintUsed ? 5 : 2; state.xp += 6; progress.rewarded = true; playSuccess(); }
+    else if (!hadCorrect) { if (!cloud.authenticated) window.NexoTienda.earn(state, firstAttempt && !progress.hintUsed ? 'sinAyuda' : 'conAyuda', todayKey()); state.xp += 6; progress.rewarded = true; playSuccess(); }
     state.practice[item.id] = progress; saveState(); renderRoute(false);
     cloud.track(progress.correct?'exercise_attempted':'exercise_failed',{exercise_id:item.id,correct:progress.correct,attempt:progress.attempts});
   }
@@ -1689,7 +1686,8 @@
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Nexo Estudio//ES'];
     events.forEach(event => {
       const date = event.date.replaceAll('-', ''), time = event.time ? event.time.replace(':', '') + '00' : '';
-      lines.push('BEGIN:VEVENT', `UID:${event.id}@nexo-estudio`, `DTSTAMP:${todayKey().replaceAll('-', '')}T120000`, time ? `DTSTART:${date}T${time}` : `DTSTART;VALUE=DATE:${date}`, `SUMMARY:${event.title.replace(/[;,]/g, ' ')}`, `DESCRIPTION:${subjectFor(event.subject).name} · ${event.type}`, 'END:VEVENT');
+      const end = window.NexoCalendarModel.validTime(event.endTime) ? event.endTime.replace(':', '') + '00' : '';
+      lines.push('BEGIN:VEVENT', `UID:${event.id}@nexo-estudio`, `DTSTAMP:${todayKey().replaceAll('-', '')}T120000`, time ? `DTSTART:${date}T${time}` : `DTSTART;VALUE=DATE:${date}`, ...(time && end ? [`DTEND:${date}T${end}`] : []), `SUMMARY:${event.title.replace(/[;,]/g, ' ')}`, `DESCRIPTION:${subjectFor(event.subject).name} · ${event.type}`, 'END:VEVENT');
     });
     lines.push('END:VCALENDAR');
     const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' }), url = URL.createObjectURL(blob), link = document.createElement('a');
@@ -1759,13 +1757,14 @@
     }
     if (button.dataset.profileDeleteGrade) return removeGrade(button.dataset.profileDeleteGrade, ui.profileSubject);
     if (button.dataset.deleteAbsence) return removeWithUndo(state.absences, button.dataset.deleteAbsence, 'Inasistencia');
+    if (button.dataset.clockSize) return resizeClock(Number(button.dataset.clockSize));
     if (button.dataset.action === 'timer-start') return timerStart();
     if (button.dataset.action === 'timer-pause') return timerPause();
     if (button.dataset.action === 'timer-finish') { if (button.closest('.home-clock')) sparkBurst(button); return timerFinish(); }
     if (button.dataset.action === 'timer-reset') return timerReset();
     if (button.dataset.action === 'exercise-hint') { const p = state.practice[button.dataset.exerciseId] || { attempts: 0 }; p.hintOpen = !p.hintOpen; if (p.hintOpen) p.hintUsed = true; state.practice[button.dataset.exerciseId] = p; saveState({ backup: false }); return renderRoute(false); }
     if (button.dataset.action === 'exercise-retry') { const p = state.practice[button.dataset.exerciseId] || {}; p.checked = false; delete p.selected; state.practice[button.dataset.exerciseId] = p; saveState({ backup: false }); return renderRoute(false); }
-    if (button.dataset.action === 'guide-complete') { const id = button.dataset.guideId; state.guides[id] = { ...(state.guides[id] || {}), completed: true, completedAt: todayKey() }; if (!cloud.authenticated) state.coins += state.guides[id].rewarded ? 0 : 8; state.guides[id].rewarded = true; saveState(); playSuccess(); return renderRoute(false); }
+    if (button.dataset.action === 'guide-complete') { const id = button.dataset.guideId; state.guides[id] = { ...(state.guides[id] || {}), completed: true, completedAt: todayKey() }; state.guides[id].rewarded = true; awardHitos(); saveState(); playSuccess(); return renderRoute(false); }
     if (button.dataset.action === 'new-error') return routeTo('practice', 'errors', 'new');
     if (button.dataset.action === 'toggle-error-status') { const item = state.errors.find(e => e.id === button.dataset.errorId); if (item) { item.status = item.status === 'resolved' ? 'open' : 'resolved'; item.reviewedAt = todayKey(); saveState(); renderRoute(false); } return; }
     if (button.dataset.deleteError) return removeWithUndo(state.errors, button.dataset.deleteError, 'Error');
