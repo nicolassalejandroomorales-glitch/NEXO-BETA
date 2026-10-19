@@ -7,15 +7,14 @@
   const asset = p => new URL('../assets/tutorial/' + p, HERE).href;
   const STORE_TEST = 'nexo.tutorial.test.v1', STORE_REAL = 'nexo.tutorial.v1';
   let STORE = STORE_TEST;
-  const ROWS = ['reposo', 'senalar', 'abrir', 'importante', 'feliz', 'sorprendido', 'pensativo', 'triste', 'enojado', 'espiral', 'sudor', 'guino', 'nocreo', 'lista', 'dedo'];
   const KINDS = ['atomo', 'matraz', 'slime'];
   const INFO = {
     atomo:  { nombre: 'Átomo',  pose: 'dedo',        ficha: 'Inteligente. Te corrige con cariño. Probablemente tiene razón.', tono: 620,
-              sugeridos: ['Quark', 'Mol', 'Ión'],       hola: n => `Soy ${n}. Calculé que estudiar contigo tiene una probabilidad alta de éxito.` },
+              sugeridos: ['Quark', 'Mol', 'Ión'],       grito: '¡EUREKA! …creo. Sí. Sí, fue eureka.', hola: n => `Soy ${n}. Calculé que estudiar contigo tiene una probabilidad alta de éxito.` },
     matraz: { nombre: 'Matraz', pose: 'sorprendido', ficha: 'Valiente. Se lanza a todo. A veces sin mirar.', tono: 470,
-              sugeridos: ['Chispa', 'Burbuja', 'Bruno'], hola: n => `¡Soy ${n}! ¿Qué explotamos primero? Era broma. Más o menos.` },
+              sugeridos: ['Chispa', 'Burbuja', 'Bruno'], grito: '¡BLUP! ¡Estoy vivo! ¡Hola, mundo!', hola: n => `¡Soy ${n}! ¿Qué explotamos primero? Era broma. Más o menos.` },
     slime:  { nombre: 'Slime',  pose: 'feliz',       ficha: 'Dormilón. Vive tranquilo. Duerme más que tú en época de pruebas.', tono: 260,
-              sugeridos: ['Gelatina', 'Flan', 'Nube'],  hola: n => `Hola. Soy ${n}. …¿Hay almohadas por aquí?` }
+              sugeridos: ['Gelatina', 'Flan', 'Nube'],  grito: '…bluuu. ¿Ya? ¿Tan pronto?', hola: n => `Hola. Soy ${n}. …¿Hay almohadas por aquí?` }
   };
   // Qué dice la mascota al tocar cada objeto del refugio (ids de NexoHomeScene.getProfile().hotspots; guion paso 12).
   const OBJETOS = {
@@ -44,48 +43,36 @@
 
   // Pasos del tramo 1 (guion 1–10). text puede ser función del estado s.
   const STEPS = [
-    { id: 'g1', pose: 'dormido', text: 'Zzz… ¿eh? ¿Alguien abrió el libro?' },
-    { id: 'g1b', pose: 'sorprendido', text: '¡Un estudiante! Hace siglos que nadie me abría.' },
-    { id: 'g2', pose: 'feliz', text: 'Soy el Grimorio. Estudio contigo, tú haces el trabajo y yo me llevo el crédito. Es un buen trato.' },
-    { id: 'g3', pose: 'pensativo', text: 'Antes de empezar necesitas un compañero. Mira lo que encontré en la repisa…' },
-    { id: 'huevos', pose: 'guino', text: 'Elige uno. Es para siempre, así que nada de arrepentirse.', scene: 'huevos', needs: 'kind', next: 'Elegir este huevo' },
-    { id: 'seguro', pose: 'nocreo', text: 'Última pregunta antes de confirmar: ¿seguro? No hay devolución.', scene: 'uno', next: 'Sí, es este', back: 'Mejor otro' },
+    { id: 'g1', pose: 'dormido', text: '~Zzz… ¿quién roza mis páginas?' },
+    { id: 'g1b', pose: 'sorprendido', text: 'Una mano viva. Hacía siglos que ningún estudiante me abría.' },
+    { id: 'g2', pose: 'feliz', text: 'Soy el *Grimorio*. Guardo lo que se aprende. Tú haces el trabajo… yo me llevo el crédito. Es un buen trato.' },
+    { id: 'g3', pose: 'pensativo', text: 'Nadie cruza esta torre solo. Mira lo que dormía en la repisa…' },
+    { id: 'huevos', pose: 'guino', text: 'Elige uno. Es para *siempre*, así que nada de arrepentirse.', scene: 'huevos', needs: 'kind', next: 'Elegir este huevo' },
+    { id: 'seguro', pose: 'nocreo', text: 'Una pregunta antes de sellar el pacto: ¿*seguro*? Los huevos no aceptan devoluciones.', scene: 'uno', next: 'Sí, es este', back: 'Mejor otro' },
     { id: 'nace', scene: 'nace', noBack: true, auto: true },
-    { id: 'nombre', pose: 'feliz', text: 'Ahora el nombre. Será el que escuches cuando te alienten y cuando saques un 7. Elige bien.', scene: 'nombre', needs: 'draft', next: 'Ponerle ese nombre', noBack: true },
-    { id: 'graba', pose: 'importante', text: s => `${s.draft.trim()}. Queda grabado en tinta que no sale. Última confirmación.`, scene: 'mascota', next: 'Confirmar' },
+    { id: 'nombre', pose: 'feliz', text: 'Ahora el *nombre*. Será la voz que te aliente… y la que celebre tu 7. Elígelo con cuidado.', scene: 'nombre', needs: 'draft', next: 'Ponerle ese nombre', noBack: true },
+    { id: 'graba', pose: 'importante', text: s => `${s.draft.trim()}… Queda grabado en tinta que no se borra. Última confirmación.`, scene: 'mascota', next: 'Confirmar' },
     { id: 'hola', who: 'M', text: s => INFO[s.kind].hola(s.name), scene: 'mascota', noBack: true },
     { id: 'ref1', who: 'M', text: 'Este es el refugio: tu base. Cambia con la hora del día y el clima, y siempre vuelves aquí.', scene: 'refugio', noBack: true },
     { id: 'ref2', who: 'M', text: 'Toca los objetos. Cada uno hace algo distinto.', scene: 'refugio', objetos: true, needs: 'seen', next: 'Ya los toqué todos' },
     { id: 'vest', who: 'M', text: 'Aquí me vistes y compras cosas con monedas. Sí, tengo opiniones sobre mi sombrero.', scene: 'refugio' },
-    { id: 'dato1', pose: 'pensativo', text: 'Dato: volver todos los días, aunque sea poco, ayuda más que estudiar mucho una sola noche. El espaciado funciona.', scene: 'mascota' },
-    { id: 'ruta', pose: 'senalar', text: 'Esta es tu ruta al 7. Sigue el material de tu semestre y se adapta a tu tiempo, a lo que ya sabes y a tus errores.', scene: 'panel',
-      panel: '<div class="tut-path"><b>Hoy</b><i></i><b>PEP 1</b><i></i><b>Un 7</b></div><div class="tut-chips"><span>tu tiempo</span><span>lo que ya sabes</span><span>tus errores</span></div>' },
-    { id: 'evid', pose: 'dedo', text: 'Releer da sensación de dominio. Acertar sin ayuda da dominio de verdad. Por eso te pido que respondas antes de mostrarte nada.', scene: 'panel',
+    { id: 'rec-inicio', pose: 'senalar', text: 'Basta de maquetas. Ven, te enseño tu torre *de verdad*.', scene: 'mascota', next: 'Vamos', recorrido: 'inicio' },
+    { id: 'dato1', pose: 'pensativo', text: 'Dato: volver cada día, aunque sea poco, pesa más que una sola noche heroica. El *espaciado* funciona.', scene: 'mascota' },
+    { id: 'rec-aprender', pose: 'senalar', text: 'Ahora *bajemos*: el sótano de los cristales, donde se estudia de verdad. Sígueme.', scene: 'mascota', next: 'Vamos', recorrido: 'aprender' },
+    { id: 'evid', pose: 'dedo', text: 'Releer da *sensación* de dominio. Acertar sin ayuda da dominio *de verdad*. Por eso te pido responder antes de mostrarte nada.', scene: 'panel',
       panel: '<div class="tut-vs"><div><h4>Releer</h4><p>Se siente fácil.<br>Se olvida rápido.</p></div><div class="win"><h4>Responder sin mirar</h4><p>Cuesta un poco.<br>Se queda.</p></div></div><small class="tut-cite">Roediger y Karpicke, 2006: practicar recordando supera a releer cuando se evalúa días después.</small>' },
-    { id: 'espac', pose: 'importante', text: 'Te hago volver a temas viejos justo antes de que se te olviden. Molesta un poco. Funciona.', scene: 'panel',
+    { id: 'espac', pose: 'importante', text: 'Te haré volver a temas viejos justo antes de que se disuelvan en la niebla. Molesta un poco. Funciona.', scene: 'panel',
       panel: '<div class="tut-time"><span>Día 1</span><i></i><span>Día 3</span><i class="l"></i><span>Día 8</span><i class="xl"></i><span>Día 21</span></div><small class="tut-cite">Cepeda et al., 2006: repartir el repaso en el tiempo mejora el recuerdo a largo plazo frente a hacerlo todo junto.</small>' },
-    { id: 'error', pose: 'pensativo', text: 'Equivocarte no es el fin. Es información: la ruta se ajusta a lo que fallaste.', scene: 'panel',
+    { id: 'error', pose: 'pensativo', text: 'Equivocarte no es el fin. Es *información*: la ruta se ajusta a lo que fallaste.', scene: 'panel',
       panel: '<div class="tut-path"><b>Fallo</b><i></i><b>Pista</b><i></i><b>Ruta ajustada</b></div>' },
-    { id: 'camp', pose: 'abrir', text: 'Esta es la campaña Camino a la PEP 1: un mapa, jefes y combates que avanzan con tu estudio.', scene: 'panel',
-      panel: '<div class="tut-path"><b>Inicio</b><i></i><b>Combate</b><i></i><b>Jefe</b></div><div class="tut-chips"><span>mapa</span><span>jefes</span><span>combates</span></div>' },
-    { id: 'desaf', pose: 'senalar', text: 'Los desafíos son retos cortos con premio. Perfectos para un rato libre entre clases.', scene: 'panel',
-      panel: '<div class="tut-vs"><div><h4>Reto corto</h4><p>Unos minutos.<br>Una pregunta a la vez.</p></div><div class="win"><h4>Premio</h4><p>Monedas para<br>tu refugio.</p></div></div>' },
-    { id: 'monedas', pose: 'feliz', text: 'Aquí ganas monedas, y las gastas en la tienda del refugio.', scene: 'panel',
+    { id: 'monedas', pose: 'feliz', text: 'Aquí ganas *monedas*… y las gastas en la tienda del refugio.', scene: 'panel',
       panel: '<div class="tut-path"><b>Juegas</b><i></i><b>Ganas monedas</b><i></i><b>Tienda</b></div>' },
-    { id: 'dato2', pose: 'guino', text: 'Dato: jugar no es perder el tiempo. Te obliga a recordar sin mirar, que es justo lo que funciona.', scene: 'panel',
+    { id: 'dato2', pose: 'guino', text: 'Dato: jugar no es perder el tiempo. Te obliga a recordar sin mirar, que es justo lo que *funciona*.', scene: 'panel',
       panel: '<div class="tut-vs"><div><h4>Mirar la respuesta</h4><p>Se siente bien.<br>Enseña poco.</p></div><div class="win"><h4>Recordarla jugando</h4><p>Cuesta un poco.<br>Se queda.</p></div></div>' },
-    { id: 'cal', pose: 'senalar', text: 'Calendario y prioridades: tus fechas de pruebas. Con eso te digo qué estudiar primero.', scene: 'panel',
-      panel: '<div class="tut-path"><b>Tus fechas</b><i></i><b>Prioridades</b><i></i><b>Qué estudiar hoy</b></div>' },
-    { id: 'notas', pose: 'abrir', text: 'Notas y labs: tus apuntes y trabajos de laboratorio, en un solo lugar.', scene: 'panel',
-      panel: '<div class="tut-vs"><div><h4>Notas</h4><p>Tus apuntes<br>y calificaciones.</p></div><div><h4>Labs</h4><p>Trabajos de<br>laboratorio.</p></div></div>' },
-    { id: 'rangos', pose: 'importante', text: 'Estadísticas y rangos: tu avance real y tus rangos arcanos. Subes por evidencia, no por tiempo sentado.', scene: 'panel',
-      panel: '<div class="tut-path"><b>Evidencia</b><i></i><b>Avance real</b><i></i><b>Rango arcano</b></div>' },
-    { id: 'ajustes', pose: 'guino', text: 'Ajustes e inasistencias: sonido, tutoriales (aquí vuelves a verme) y control de faltas.', scene: 'panel',
-      panel: '<div class="tut-chips"><span>sonido</span><span>tutoriales</span><span>inasistencias</span></div>' },
-    { id: 'config', pose: 'importante', text: 'Último paso serio: dime tus ramos, las fechas de tus pruebas y cuánto tiempo tienes. Con eso la ruta parte hecha a tu medida.', scene: 'panel',
-      panel: '<div class="tut-chips"><span>ramos</span><span>fechas de pruebas</span><span>tiempo disponible</span></div><div class="tut-links"><a class="secondary-btn" href="#/planner/calendar">Ir al calendario</a><a class="secondary-btn" href="#/profile">Ir al perfil</a></div><small class="tut-cite">Cuando termines, vuelve a #/tutorial y seguimos donde quedaste.</small>' },
+    { id: 'rec-organizacion', pose: 'senalar', text: 'Ahora tu *estudio de planos*: fechas, plan del día, notas y labs.', scene: 'mascota', next: 'Vamos', recorrido: 'organizacion' },
+    { id: 'rec-perfil', pose: 'importante', text: 'Por último, tu *perfil*. Sígueme.', scene: 'mascota', next: 'Vamos', recorrido: 'perfil' },
     { id: 'premio', who: 'M', text: '¡Terminamos! Esto es para ti. Gasta con cabeza.', scene: 'premio', noBack: true },
-    { id: 'fin', pose: 'feliz', text: 'Fue un honor. Si me necesitas, estoy en Ajustes. Y no, no me pagan.', scene: 'mascota', noBack: true }
+    { id: 'fin', pose: 'feliz', text: 'Fue un honor. Si me necesitas, estoy en Ajustes… y no, no me pagan.', scene: 'mascota', noBack: true }
   ];
 
   const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (_) { return {}; } };
@@ -96,7 +83,7 @@
 
   function ensureCss() {
     if (cssLoaded) return; cssLoaded = true;
-    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = new URL('./tutorial.css?v=9', HERE).href; document.head.append(l);
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = new URL('./tutorial.css?v=16', HERE).href; document.head.append(l);
   }
   function ensurePixel() {
     if (window.PixelMascotas) return Promise.resolve(window.PixelMascotas);
@@ -110,9 +97,36 @@
   function ensureMagia() {
     if (window.NexoMagia) return Promise.resolve(window.NexoMagia);
     magiaLoading = magiaLoading || new Promise((ok, fail) => {
-      const s = document.createElement('script'); s.src = new URL('./magia.js?v=4', HERE).href; s.onload = () => ok(window.NexoMagia); s.onerror = fail; document.head.append(s);
+      const s = document.createElement('script'); s.src = new URL('./magia.js?v=5', HERE).href; s.onload = () => ok(window.NexoMagia); s.onerror = fail; document.head.append(s);
     });
     return magiaLoading;
+  }
+
+  let huevosLoading = null;
+  function ensureHuevos() {
+    if (window.NexoHuevos) return Promise.resolve(window.NexoHuevos);
+    huevosLoading = huevosLoading || new Promise((ok, fail) => {
+      const s = document.createElement('script'); s.src = new URL('./huevos.js?v=1', HERE).href; s.onload = () => ok(window.NexoHuevos); s.onerror = fail; document.head.append(s);
+    });
+    return huevosLoading;
+  }
+
+  let vivoLoading = null;
+  function ensureVivo() {
+    if (window.NexoGrimorioVivo) return Promise.resolve(window.NexoGrimorioVivo);
+    vivoLoading = vivoLoading || new Promise((ok, fail) => {
+      const s = document.createElement('script'); s.src = new URL('./grimorio-vivo.js?v=3', HERE).href; s.onload = () => ok(window.NexoGrimorioVivo); s.onerror = fail; document.head.append(s);
+    });
+    return vivoLoading;
+  }
+
+  let recLoading = null;
+  function ensureRecorrido() {
+    if (window.NexoRecorrido) return Promise.resolve(window.NexoRecorrido);
+    recLoading = recLoading || new Promise((ok, fail) => {
+      const s = document.createElement('script'); s.src = new URL('./recorrido.js?v=17', HERE).href; s.onload = () => ok(window.NexoRecorrido); s.onerror = fail; document.head.append(s);
+    });
+    return recLoading;
   }
 
   function render(app, opts = {}) {
@@ -139,7 +153,8 @@
       </div>
       <div class="tut-nav"><button class="secondary-btn tut-back" type="button">Atrás</button><button class="primary-btn tut-next" type="button">Siguiente</button></div>`;
     app.append(root);
-    let magia = null, aura = null;
+    let magia = null, aura = null, vivo = null;
+    ensureVivo().then(V => { if (!root.isConnected) return; vivo = V.mount(grim); vivo.set(pose); vivo.talk(typing); }).catch(() => {});
     ensureMagia().then(M => { if (!root.isConnected) return; magia = M.mount(root); if (!reduced()) aura = M.aura(grim); }).catch(() => {});
     const $ = q => root.querySelector(q);
     const sceneEl = $('.tut-scene'), grim = $('.tut-grim'), tagEl = $('.tut-tag'), textEl = $('.tut-text'), box = $('.tut-box'),
@@ -161,37 +176,73 @@
     const MUTE = 'nexo.tutorial.mute';
     const muted = () => { try { return localStorage.getItem(MUTE) === '1'; } catch (_) { return false; } };
     const STEPS_UP = [-5, -3, 0, 2, 4, 7];
-    const beep = (hz, big = false) => {
+    // Timbre por especie: [onda, múltiplo del tono, volumen]; glide = hacia dónde se desliza el tono; dur = largo del blip.
+    const TIMBRE = {
+      atomo:  { osc: [['square', 1, .5], ['triangle', .5, .9]], glide: 1, dur: 1 },            // seco y nítido
+      matraz: { osc: [['sawtooth', 1, .28], ['sine', 1.5, .6]], glide: 1.35, dur: 1.15 },       // burbujeante: el tono sube
+      slime:  { osc: [['sine', 1, .95], ['triangle', .5, .7]], glide: .78, dur: 1.9 }           // blando: el tono cae
+    };
+    const audio = () => { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); return ac; };
+    // Voz del Grimorio: un golpecito grave y hueco por letra (onda de pulso angosta, tono casi fijo), aprobado por Niquito el 18 oct.
+    let pulso = null;
+    function vozGrimorio(fx, brillo) {
       if (muted()) return;
       try {
-        ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-        if (ac.state === 'suspended') ac.resume();
+        audio(); const t = ac.currentTime, f = 140 * (brillo ? 1.2 : 1) * (1 + (Math.random() - .5) * .05) * (fx === 'tiembla' ? 1.05 : 1), v = fx === 'susurro' ? 0.04 : 0.1;
+        if (!pulso) {   // pulso de ancho 25 %: coeficientes de Fourier
+          const re = new Float32Array(33), im = new Float32Array(33);
+          for (let n = 1; n < 33; n++) { re[n] = Math.sin(2 * Math.PI * n * .25) / (n * Math.PI); im[n] = (1 - Math.cos(2 * Math.PI * n * .25)) / (n * Math.PI); }
+          pulso = ac.createPeriodicWave(re, im);
+        }
+        const o = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
+        o.setPeriodicWave(pulso); o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 3500;
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.065);
+        o.connect(lp); lp.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.07);
+      } catch (_) { /* sin audio */ }
+    }
+    const beep = (hz, big = false, kind) => {
+      if (muted()) return;
+      try {
+        audio();
         const t = ac.currentTime, f = hz * 2 ** (STEPS_UP[Math.floor(Math.random() * STEPS_UP.length)] / 12) * (big ? 1.5 : 1);
         const out = ac.createGain(); out.connect(ac.destination);
         out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(big ? 0.16 : 0.1, t + 0.006); out.gain.exponentialRampToValueAtTime(0.0001, t + (big ? 0.16 : 0.075));
-        [['square', f, 0.55], ['triangle', f / 2, 0.9]].forEach(([type, fr, v]) => {
-          const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = fr; g.gain.value = v;
-          o.connect(g); g.connect(out); o.start(t); o.stop(t + (big ? 0.18 : 0.09));
+        const tm = TIMBRE[kind] || TIMBRE.atomo, len = (big ? 0.18 : 0.09) * tm.dur;
+        out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(big ? 0.16 : 0.1, t + 0.006); out.gain.exponentialRampToValueAtTime(0.0001, t + len - 0.01);
+        tm.osc.forEach(([type, m, v]) => {
+          const o = ac.createOscillator(), g = ac.createGain(); o.type = type; g.gain.value = v;
+          o.frequency.setValueAtTime(f * m, t); if (tm.glide !== 1) o.frequency.exponentialRampToValueAtTime(f * m * tm.glide, t + len);
+          o.connect(g); g.connect(out); o.start(t); o.stop(t + len);
         });
       } catch (_) { /* sin audio */ }
     };
 
     // ——— Grimorio ———
     const px = () => parseFloat(root.style.getPropertyValue('--s')) || 4;
-    const hop = () => grim.animate([{ translate: '0 0' }, { translate: `0 ${-2 * px()}px` }, { translate: '0 0' }], { duration: 150, easing: 'ease-out' });
+    const hop = () => { if (vivo) vivo.kick((Math.random() < .5 ? -1 : 1) * 2.2); grim.animate([{ translate: '0 0' }, { translate: `0 ${-2 * px()}px` }, { translate: '0 0' }], { duration: 150, easing: 'ease-out' }); };
+    // Gesto por emoción: se anima solo translate/rotate/scale (la flotación usa transform, así que no chocan).
+    const GESTOS = {
+      sorprendido: [[{ translate: '0 0', scale: '1 1' }, { translate: '0 -4u', scale: '.92 1.14', offset: .3 }, { translate: '0 0', scale: '1.08 .92', offset: .62 }, { translate: '0 0', scale: '1 1' }], 520],
+      enojado: [[{ rotate: '0deg' }, { rotate: '-4deg' }, { rotate: '4deg' }, { rotate: '-3deg' }, { rotate: '3deg' }, { rotate: '0deg' }], 480],
+      triste: [[{ translate: '0 0', scale: '1 1' }, { translate: '0 2u', scale: '1.03 .94' }, { translate: '0 1u', scale: '1.01 .97' }], 900],
+      feliz: [[{ translate: '0 0' }, { translate: '0 -3u', offset: .22 }, { translate: '0 0', offset: .45 }, { translate: '0 -2u', offset: .7 }, { translate: '0 0' }], 560],
+      guino: [[{ rotate: '0deg' }, { rotate: '8deg', offset: .35 }, { rotate: '0deg' }], 450],
+      pensativo: [[{ rotate: '0deg' }, { rotate: '-5deg', offset: .4 }, { rotate: '3deg', offset: .75 }, { rotate: '0deg' }], 900],
+      espiral: [[{ rotate: '0deg' }, { rotate: '14deg' }, { rotate: '-14deg' }, { rotate: '8deg' }, { rotate: '0deg' }], 760],
+      sudor: [[{ translate: '0 0' }, { translate: '-1u 0' }, { translate: '1u 0' }, { translate: '-1u 0' }, { translate: '0 0' }], 420],
+      nocreo: [[{ rotate: '0deg' }, { rotate: '-8deg' }, { rotate: '8deg' }, { rotate: '-8deg' }, { rotate: '8deg' }, { rotate: '0deg' }], 620],
+      importante: [[{ scale: '1 1' }, { scale: '1.09 1.09', offset: .4 }, { scale: '1 1' }], 380],
+      dedo: [[{ scale: '1 1', rotate: '0deg' }, { scale: '1.06 1.06', rotate: '5deg', offset: .4 }, { scale: '1 1', rotate: '0deg' }], 400],
+      abrir: [[{ scale: '1 1' }, { scale: '1.07 1.07', offset: .4 }, { scale: '1 1' }], 380]
+    };
+    function gesto(name) {
+      const g = GESTOS[name]; if (!g || reduced()) return;
+      grim.animate(g[0].map(k => ({ ...k, translate: k.translate && k.translate.replace(/(-?\d+)u/g, (_, n) => n * px() + 'px') })), { duration: g[1], easing: 'ease-in-out' });
+    }
     function drawGrim(name, col = 0) {
-      if (name !== pose && !reduced()) { grim.classList.remove('pop'); void grim.offsetWidth; grim.classList.add('pop'); if (aura) aura.burst(); }
+      if (name !== pose && !reduced()) { grim.classList.remove('pop'); void grim.offsetWidth; grim.classList.add('pop'); if (aura) { aura.burst(); aura.mood(name); } gesto(name); }
       pose = name;
-      if (name === 'dormido') {
-        grim.style.backgroundImage = `url(${asset('grimorio-v1.png')})`;
-        grim.style.backgroundSize = 'calc(var(--s) * 340px) calc(var(--s) * 76px)';
-        grim.style.backgroundPosition = 'calc(var(--s) * -272px) 0';
-        return;
-      }
-      const row = Math.max(0, ROWS.indexOf(name));
-      grim.style.backgroundImage = `url(${asset('grimorio-hablar.png')})`;
-      grim.style.backgroundSize = `calc(var(--s) * 204px) calc(var(--s) * ${76 * ROWS.length}px)`;
-      grim.style.backgroundPosition = `calc(var(--s) * ${-68 * col}px) calc(var(--s) * ${-76 * row}px)`;
+      if (vivo) { vivo.set(name); vivo.mouth(col); }
     }
     const speakerIsPet = () => steps[s.i].who === 'M';
 
@@ -203,33 +254,52 @@
     }
 
     // ——— Texto letra por letra ———
+    // Marcas del texto: *palabra* brilla en dorado; "~" al inicio = susurro (chico y tenue); "^" al inicio = temblor.
+    const PAUSA = { '…': 380, '.': 280, '?': 280, '!': 260, ':': 220, ',': 170, '—': 170 };
+    function parse(raw) {
+      const fx = raw[0] === '~' ? 'susurro' : raw[0] === '^' ? 'tiembla' : '';
+      const plain = [], glow = []; let on = false;
+      for (const ch of fx ? raw.slice(1) : raw) { if (ch === '*') { on = !on; continue; } plain.push(ch); glow.push(on); }
+      return { fx, plain, glow };
+    }
+    function paint(p, k, nl) {
+      let out = '', open = false;
+      for (let j = 0; j < k; j++) {
+        if (p.glow[j] !== open) { out += open ? '</b>' : '<b class="gl">'; open = p.glow[j]; }
+        out += nl && j === k - 1 ? `<span class="nl">${esc(p.plain[j])}</span>` : esc(p.plain[j]);
+      }
+      textEl.innerHTML = out + (open ? '</b>' : '');
+    }
+    let cur = parse(''), altoTexto = 0;
     function say(text, who = 'G', then) {
-      clearTimeout(typeTimer); curText = text;
+      clearTimeout(typeTimer); curText = text; cur = parse(text);
+      const { plain, glow, fx } = cur, n = plain.length;
       tagEl.textContent = who === 'M' ? (s.name || INFO[s.kind]?.nombre || '') : 'Grimorio';
-      box.classList.remove('done');
-      let k = 0; typing = true; textEl.textContent = ''; if (aura) aura.talk(who === 'G');
-      if (!reduced()) { box.classList.remove('entra'); void box.offsetWidth; box.classList.add('entra'); }
+      box.classList.remove('done', 'susurro', 'tiembla'); if (fx) box.classList.add(fx);
+      // Reserva el alto del texto completo (y nunca lo achica entre pasos): así la nube y el botón Siguiente no se mueven mientras se escribe ni al cambiar de paso.
+      paint(cur, n, false); textEl.style.minHeight = ''; altoTexto = Math.max(altoTexto, textEl.offsetHeight); textEl.style.minHeight = altoTexto + 'px';
+      let k = 0; typing = true; textEl.textContent = ''; if (aura) aura.talk(who === 'G'); if (vivo) vivo.talk(who === 'G');
+      if (!reduced()) { box.style.setProperty('--bh', box.offsetHeight + 'px'); box.classList.remove('entra'); void box.offsetWidth; box.classList.add('entra'); }
       const hz = who === 'M' ? INFO[s.kind].tono / 2 : 210;
       const tick = () => {
         if (!alive()) return;
         k++;
-        if (reduced() || k >= text.length) textEl.textContent = text.slice(0, k);
-        else textEl.innerHTML = esc(text.slice(0, k - 1)) + `<span class="nl">${esc(text[k - 1])}</span>`;
+        paint(cur, k, !reduced() && k < n);
+        const ch = plain[k - 1], inicio = k === 1 || plain[k - 2] === ' ';
         if (who === 'G' && pose !== 'dormido') drawGrim(pose, [1, 2, 1, 0][k % 4]);
-        if (/[\p{L}\p{N}]/u.test(text[k - 1])) beep(hz);
-        if (who === 'G' && !reduced() && (k === 1 || text[k - 2] === ' ') && /\S/.test(text[k - 1])) hop();
-        if (!reduced() && (k === 1 || text[k - 2] === ' ') && /\S/.test(text[k - 1])) chispita();
-        if (k >= text.length) { finishType(); if (then) then(); return; }
-        typeTimer = setTimeout(tick, /[.,…?!]/.test(text[k - 1]) ? 150 : 28);
+        if (who === 'M') { if (/[\p{L}\p{N}]/u.test(ch)) beep(hz, false, s.kind); }
+        else if (/\p{L}/u.test(ch)) vozGrimorio(fx, glow[k - 1]);
+        if (who === 'G' && !reduced() && inicio && /\S/.test(ch)) hop();
+        if (!reduced() && inicio && /\S/.test(ch)) chispita();
+        if (k >= n) { finishType(); if (then) then(); return; }
+        typeTimer = setTimeout(tick, (PAUSA[ch] || (glow[k - 1] ? 48 : 28)) * (fx === 'susurro' ? 1.5 : 1));
       };
       tick();
     }
+    function skipType() { clearTimeout(typeTimer); paint(cur, cur.plain.length, false); finishType(); }
     function finishType() {
-      typing = false; box.classList.add('done'); if (aura) aura.talk(false);
+      typing = false; box.classList.add('done'); if (aura) aura.talk(false); if (vivo) vivo.talk(false);
       if (pose !== 'dormido' && !speakerIsPet()) drawGrim(pose, 0);
-    }
-    function skipType(full) {
-      clearTimeout(typeTimer); textEl.textContent = full; finishType();
     }
 
     // ——— Mascota real (dibujo de la app) ———
@@ -258,7 +328,9 @@
     function eggEl(kind, frame = 0, cls = '') {
       const e = el('div', 'tut-egg ' + cls); e.dataset.kind = kind;
       e.style.backgroundImage = `url(${asset('huevo-' + kind + '.png')})`;
-      setEgg(e, frame); return e;
+      setEgg(e, frame);
+      if (!reduced()) ensureHuevos().then(H => { if (alive()) e.fx = H.attach(e, kind); }).catch(() => {});   // vida propia de cada huevo (huevos.js)
+      return e;
     }
     const setEgg = (e, f) => { e.style.backgroundPosition = `calc(var(--e) * ${-56 * f}px) 0`; };
 
@@ -271,6 +343,8 @@
         KINDS.forEach(k => {
           const b = el('button', 'tut-egg-btn'); b.type = 'button'; b.setAttribute('aria-label', 'Huevo de ' + INFO[k].nombre.toLowerCase());
           b.append(eggEl(k)); b.classList.toggle('on', s.kind === k);
+          const vivo = v => () => { const f = b.firstChild.fx; if (f) f.excite(v); };
+          ['mouseenter', 'focus'].forEach(ev => b.addEventListener(ev, vivo(true))); ['mouseleave', 'blur'].forEach(ev => b.addEventListener(ev, vivo(false)));
           b.addEventListener('click', () => {
             s.kind = k; save(s); row.querySelectorAll('.tut-egg-btn').forEach(x => x.classList.toggle('on', x === b));
             drawGrim(INFO[k].pose); say(INFO[k].ficha); refresh();
@@ -335,19 +409,23 @@
       const mascot = petCanvas(s.kind, 'feliz'); const m = el('div', 'tut-mascot hatch'); m.append(mascot.c); m.hidden = true; sceneEl.append(m);
       let shake = 0;
       const frame = f => setEgg(egg, f);
-      drawGrim('sudor'); say('Está temblando… ¿es normal? Creo que es normal.');
-      later(1500, () => { shake = 1; if (!reduced()) egg.classList.add('shake'); frame(1); });
+      drawGrim('sudor'); say('^Está temblando… ¿es normal? Creo que es normal.');
+      later(1500, () => { shake = 1; if (!reduced()) egg.classList.add('shake'); frame(1); if (egg.fx) egg.fx.level(1); });
       scene.iv = setInterval(() => { if (shake && alive()) frame(Date.now() % 240 < 120 ? 1 : 2); }, 120);
       later(3600, () => { frame(3); flash.className = 'tut-flash on'; later(450, () => { flash.className = 'tut-flash'; frame(1); }); });
-      later(5200, () => { shake = 0; frame(4); egg.classList.add('hard'); });
-      later(6700, () => { frame(5); drawGrim('importante'); say('¡NO SÉ SI ES NORMAL!'); });
+      later(5200, () => { shake = 0; frame(4); egg.classList.add('hard'); if (egg.fx) { egg.fx.level(2); egg.fx.excite(true); } });
+      later(6700, () => { frame(5); if (egg.fx) egg.fx.level(3); drawGrim('importante'); say('^¡NO SÉ SI ES NORMAL!'); });
       later(8300, () => { frame(6); drawGrim('espiral'); });
-      later(9800, () => { shake = 0; egg.classList.remove('shake', 'hard'); frame(7); flash.className = 'tut-flash on big'; drawGrim('sorprendido'); beep(500, true); if (magia) magia.pulse(); });
+      later(9800, () => { shake = 0; egg.classList.remove('shake', 'hard'); frame(7); flash.className = 'tut-flash on big'; drawGrim('sorprendido'); beep(500, true); if (magia) magia.pulse(); if (egg.fx) { egg.fx.level(0); egg.fx.burst(); } });
       later(10500, () => {
         flash.className = 'tut-flash'; frame(8); m.hidden = false; mascot.hop = 3;
         const t0 = performance.now(); const hop = () => { if (!alive()) return; const d = (performance.now() - t0) / 1000; mascot.hop = d < 1.6 ? Math.abs(Math.sin(d * 6)) * 5 : 0; if (d < 1.6) requestAnimationFrame(hop); };
         hop();
-        drawGrim('feliz'); say('¡Nació!', 'G', () => { busy = false; refresh(); });
+        drawGrim('feliz');
+        say('¡Nació!', 'G', () => later(250, () => {   // grito de la especie y dab (brazos hacia un lado, como en la tienda de poses)
+          mascot.arm = 'dab'; if (magia) magia.pulse(); beep(INFO[s.kind].tono, true, s.kind);
+          say(INFO[s.kind].grito, 'M', () => { busy = false; refresh(); later(1400, () => { mascot.arm = 'rest'; }); });
+        }));
       });
     }
 
@@ -370,14 +448,14 @@
       talk.classList.toggle('pet', step.who === 'M');
       scene(step.scene);
       if (step.id === 'premio' && api) api.reward();
-      if (step.who === 'M') { grim.style.backgroundImage = 'none'; tagEl.textContent = s.name; say(textOf(step), 'M'); }
+      if (step.who === 'M') { tagEl.textContent = s.name; say(textOf(step), 'M'); }
       else if (step.scene === 'nace') { nace(); }
       else { drawGrim(step.pose); say(textOf(step)); }
       refresh();
     }
     nextBtn.addEventListener('click', () => {
       const step = steps[s.i];
-      if (typing && !busy) { skipType(curText); return; }
+      if (typing && !busy) { skipType(); return; }
       if (step.id === 'nombre') s.draft = s.draft.trim();
       if (step.id === 'graba') { s.name = s.draft.trim(); if (mode === 'first') api.setPet(s.kind, s.name); }
       if (s.i >= steps.length - 1) {
@@ -385,10 +463,16 @@
         if (mode !== 'test') { api.finish(); clearAll(); if (opts.exit) opts.exit(); else location.hash = '#/home'; return; }
         Object.assign(s, { kind: '', draft: '', name: '', seen: [] }); show(0); return;
       }
+      if (step.recorrido) {   // recorrido por la pantalla real: guarda el avance y, al terminar, vuelve aquí
+        s.i++; save(s); clearAll(); busy = true; refresh();
+        const volver = () => { location.hash = mode === 'test' ? '#/tutorial/test' : '#/tutorial'; };
+        ensureRecorrido().then(R => R.run(step.recorrido, { volver, voz: vozGrimorio })).catch(() => { busy = false; show(s.i); });
+        return;
+      }
       show(s.i + 1);
     });
     backBtn.addEventListener('click', () => { if (s.i > 0) show(s.i - 1); });
-    box.addEventListener('click', () => { if (typing && !busy) skipType(curText); });
+    box.addEventListener('click', () => { if (typing && !busy) skipType(); });
     const muteBtn = $('.tut-mute'), paintMute = () => { muteBtn.classList.toggle('off', muted()); muteBtn.setAttribute('aria-pressed', muted() ? 'true' : 'false'); };
     muteBtn.addEventListener('click', () => { try { localStorage.setItem(MUTE, muted() ? '0' : '1'); } catch (_) {} paintMute(); if (!muted()) beep(300, true); });
     paintMute();

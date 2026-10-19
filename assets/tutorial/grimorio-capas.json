@@ -1,0 +1,45 @@
+{
+ "frame": [
+  68,
+  76
+ ],
+ "filas": [
+  "reposo",
+  "senalar",
+  "abrir",
+  "importante",
+  "feliz",
+  "sorprendido",
+  "pensativo",
+  "triste",
+  "enojado",
+  "espiral",
+  "sudor",
+  "guino",
+  "nocreo",
+  "lista",
+  "dedo",
+  "dormido"
+ ],
+ "capas": [
+  "fondo",
+  "manoI",
+  "manoD",
+  "paginas",
+  "tapa",
+  "cara",
+  "barba",
+  "boca",
+  "extras"
+ ],
+ "cara": [
+  "normal",
+  "parpadeo"
+ ],
+ "boca": [
+  "cerrada",
+  "media",
+  "abierta"
+ ],
+ "nota": "dormido es la ultima fila; su boca es fija"
+}

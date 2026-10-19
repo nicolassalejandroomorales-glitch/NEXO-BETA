@@ -128,6 +128,7 @@
       errors: [],
       practice: {},
       academicIntelligence: {attempts:[],evidence:[],reviewSchedules:[],structuredErrors:[],userSources:[],activeTimeSegments:[]},
+      duel: null,
       studyEngine: null,
       guides: {},
       exams: {},
@@ -537,7 +538,7 @@
     return parts.length ? parts : ['home'];
   }
   // La primera vez (cuenta nueva) el Inicio lleva al tutorial. Navegadores automatizados (pruebas) no lo ven.
-  const tutorialDue = () => state.tutorial?.status === 'pending' && !navigator.webdriver;
+  const tutorialDue = () => state.tutorial?.status === 'pending' && !navigator.webdriver && !window.NexoRecorrido?.active;
   // Pantalla de entrada (docs/cuentas/SPEC.md): con la nube activa y sin sesión, la primera vez ofrece Google o invitado antes del tutorial.
   // Se espera a saber si hay sesión (cloudListo) para no mostrarla a quien ya entró.
   const ENTRADA_KEY = 'nexo-entrada-vista';
@@ -550,7 +551,7 @@
   // Avisos del Grimorio (dist/tutorial/avisos.js, carga perezosa): primera vez en cada sección si saltaste el tutorial, y novedades.
   const withAvisos = fn => {
     if (window.NexoAvisos) return fn(window.NexoAvisos);
-    const sc = document.createElement('script'); sc.src = 'tutorial/avisos.js?v=1'; sc.onload = () => fn(window.NexoAvisos); document.head.append(sc);
+    const sc = document.createElement('script'); sc.src = 'tutorial/avisos.js?v=4'; sc.onload = () => fn(window.NexoAvisos); document.head.append(sc);
   };
   const checkAvisos = route => {
     if (navigator.webdriver || !state.tutorial || state.tutorial.status === 'pending' || route[0] === 'lesson') return;
@@ -562,7 +563,7 @@
   }
   function setActiveNav(route) {
     const primary = ['subject', 'lesson', 'subjects','library','knowledge','inspector'].includes(route[0]) ? 'learn'
-      : ['practice','reviews','rescue','study'].includes(route[0]) ? 'learn'
+      : ['practice','reviews','rescue','station','study'].includes(route[0]) ? 'learn'
       : ['planner','hub','timer'].includes(route[0]) ? 'planner'
       : ['profile', 'mascot', 'stats', 'settings','history'].includes(route[0]) ? 'profile' : route[0];
     document.querySelectorAll('.nav-btn, .profile-orb').forEach(button => {
@@ -611,7 +612,7 @@
           google: () => cloud.signInWithGoogle({ volver: 'home' }),
           guest: () => { try { localStorage.setItem(ENTRADA_KEY, '1'); } catch (_) {} routeTo('home'); }
         }); };
-        if (window.NexoEntrada) go(); else { const sc = document.createElement('script'); sc.src = 'cuentas/entrada.js?v=2'; sc.onload = go; document.head.append(sc); }
+        if (window.NexoEntrada) go(); else { const sc = document.createElement('script'); sc.src = 'cuentas/entrada.js?v=5'; sc.onload = go; document.head.append(sc); }
       },
       learn: () => route[1] === 'course'
         ? (route[3] === 'lesson' ? (LESSONS[route[4]]?.subject===route[2] ? renderLesson(route[4]) : renderSubjects())
@@ -636,6 +637,8 @@
       knowledge: () => renderAcademicExplorer('knowledge'),
       reviews: () => renderAcademicExplorer('reviews'),
       rescue: () => renderAcademicRescue(route[1]||'org.lone-pair'),
+      station: () => renderStation(route[1], route[2]),
+      duelo: renderDuel,
       study: renderStudy,
       inspector: () => renderAcademicExplorer('inspector'),
       'ui-lab': () => renderWorkbench('ui-lab'),
@@ -657,7 +660,7 @@
           finish: () => { state.tutorial.status = 'done'; saveState({ backup: false }); withAvisos(a => { state.tutorial.news = Math.max(state.tutorial.news || 0, a.VERSION); saveState({ backup: false }); }); }
         };
         const go = () => { if (parseRoute()[0] === 'tutorial') window.NexoTutorial.render(app, { mode, api: mode === 'test' ? null : api, sound: () => !!state.settings?.sound, exit: () => routeTo('home') }); };
-        if (window.NexoTutorial) go(); else { const sc = document.createElement('script'); sc.src = 'tutorial/tutorial.js?v=9'; sc.onload = go; document.head.append(sc); }
+        if (window.NexoTutorial) go(); else { const sc = document.createElement('script'); sc.src = 'tutorial/tutorial.js?v=18'; sc.onload = go; document.head.append(sc); }
       }
     };
     try { (renderers[route[0]] || renderHome)(); app.dataset.renderedRoute = route.join('/'); }
@@ -683,7 +686,7 @@
 
   function renderGames() {
     // La escena del Arcade la pone world/torre-mundo.js; cada tarjeta tiene su máquina en la sala (data-game-card).
-    app.innerHTML = `<section class="page games-room">${pageHeader('ARCADE ARCANO','Juegos','Elige una máquina o cruza el portal')}<div class="games-grid">${[['memory','Memory Lab'],['hunter','Error Hunter'],['blitz','Blitz']].map(([id,name])=>`<article class="game-placeholder" data-game-card="${id}"><span aria-hidden="true">◇</span><h2>${name}</h2><p>Próximamente</p></article>`).join('')}<a class="game-placeholder game-ready" data-game-card="campaign" href="games/pep1/index.html"><span aria-hidden="true">♛</span><h2>Boss Arena · Camino a la PEP 1</h2><p>Jugar</p></a></div></section>`;
+    app.innerHTML = `<section class="page games-room">${pageHeader('ARCADE ARCANO','Juegos','Elige una máquina o cruza el portal')}<div class="games-grid">${[['memory','Memory Lab'],['hunter','Error Hunter'],['blitz','Blitz']].map(([id,name])=>`<article class="game-placeholder" data-game-card="${id}"><span aria-hidden="true">◇</span><h2>${name}</h2><p>Próximamente</p></article>`).join('')}<article class="game-placeholder" data-game-card="campaign"><span aria-hidden="true">♛</span><h2>Juego nuevo</h2><p>Próximamente</p></article></div></section>`;
   }
 
   function rankedCommitments(day) {
@@ -849,12 +852,25 @@
     return `<section class="page grimoire-scene"><nav class="grimoire-wayfinding" aria-label="Ubicación en el grimorio"><button class="wood-link" data-route="home">Volver al refugio</button><button class="wood-link" data-route="learn">Índice de ramos</button><button class="wood-link" data-route="learn" data-route-sub="library">Biblioteca</button></nav><div class="grimoire" data-book-course="${subject?.id||'index'}" style="--book-accent:${subject?window.NexoRooms.courses[subject.id]?.accent:'#5e7047'}"><nav class="grimoire-tabs" aria-label="Marcadores de ramo">${courses}</nav><span class="book-spine" aria-hidden="true"></span><div class="grimoire-spread"><header class="grimoire-frontispiece"><p class="eyebrow">NEXO · CUADERNO DE ESTUDIO</p><div class="grimoire-crest" aria-hidden="true">${subject?window.NexoRooms.courses[subject.id]?.symbol||subject.icon:'✧'}</div><h2>${subject?esc(subject.name):'El grimorio del conocimiento'}</h2><p>${subject?esc(subject.description):'Cuatro ramos, un lugar para volver a tus preguntas.'}</p>${overview}${aside}<span class="folio-mark" aria-hidden="true">✦</span></header><div class="grimoire-folio"><p class="eyebrow">${esc(pageLabel)}</p><h1>${esc(title)}</h1><p class="folio-intro">${esc(subtitle)}</p>${content}<footer class="folio-footer">${subject?esc(subject.short):'NEXO'} · ${esc(pageLabel)}</footer></div></div>${pagination}</div></section>`;
   }
 
+  // Aprender = el Sótano de los Cristales (dist/aprender/, docs/aprender-pasillo/SPEC.md). Carga bajo demanda.
+  function aprenderContext() {
+    return { getState: () => state, subjects: SUBJECTS, lessonTitle: id => LESSONS[id]?.title || id,
+      loadClass: id => loadClassroom(id),
+      openLesson: (id, mission) => {
+        if (mission) { // abrir la clase directo en esa misión (como el botón "Misión" del aula)
+          const session = (state.classSessions ||= {})[id] ||= {};
+          session.path = 'misiones'; session.mission = mission; session.beat = (session.far?.[mission] || 0) > 1 ? session.far[mission] : 1; session.panel = null;
+          saveState({ backup: false });
+        }
+        openLesson(id);
+      } };
+  }
   function renderSubjects() {
-    const subject=SUBJECTS[0],progress=subjectProgress(subject.id);
-    const content=`<div class="grimoire-index"><p class="course-opening-number">PRIMERA APERTURA · 01</p><h2 class="course-opening-title">${esc(subject.name)}</h2><p class="course-opening-description">${esc(subject.description)}</p><button class="grimoire-index-entry ink-link" data-grimoire-route="learn/course/${subject.id}">Abrir evaluaciones de ${esc(subject.name)}</button><p class="course-registration">${progress.understood} / ${progress.total} temas con registro de comprensión</p><p class="book-reading-note">Recorre los otros ramos con los marcadores o pasando página.</p></div>`;
-    const chapters=SUBJECTS.reduce((sum,item)=>sum+item.peps.length,0),themes=SUBJECTS.reduce((sum,item)=>sum+allLessons(item.id).length,0);
-    const aside=`<dl class="book-colophon"><div><dt>Ramos</dt><dd>${SUBJECTS.length}</dd></div><div><dt>Capítulos del catálogo</dt><dd>${chapters}</dd></div><div><dt>Temas disponibles</dt><dd>${themes}</dd></div></dl><p class="grimoire-margin-note">Ramo · evaluación · mapa<br>Una apertura a la vez.</p>`;
-    app.innerHTML=grimoireShell(null,'Índice del grimorio','Abre un ramo y elige la evaluación que quieres preparar.',content,aside,'I · ÍNDICE');
+    if (window.NexoAprender) return window.NexoAprender.render(app, aprenderContext());
+    app.innerHTML = '<section class="page"><div class="app-loader" role="status"><span></span><p>Bajando al sótano…</p></div></section>';
+    Promise.all([window.NexoLoader.style('./aprender/sotano.css?v=4d21dcc9'), window.NexoLoader.script('./aprender/estado.js?v=59f4873c').then(() => window.NexoLoader.script('./aprender/sotano.js?v=2f0d6eab'))])
+      .then(() => { if (['learn', 'subjects'].includes(parseRoute()[0])) renderRoute(false); })
+      .catch(() => { app.innerHTML = '<section class="page"><div class="panel error-boundary"><h1>No se pudo abrir el sótano</h1><p>Revisa tu conexión y vuelve a intentarlo.</p><button class="primary-btn" data-route="learn">Reintentar</button></div></section>'; });
   }
 
   function evaluationDates(evaluation) {
@@ -928,8 +944,8 @@
   let academicFoundation=null;
   let mascotAcademicSubscribed=false;
   function loadAcademicFoundation() {
-    if(!academicFoundation)academicFoundation=['model','graph','diagnosis','knowledge','ranks','classifiers','sources','reviews','structured','engine','library','inspector','explorer','rescue']
-      .reduce((promise,name)=>promise.then(()=>window.NexoLoader.script(`./academic/${name}.js?v=e3f63c3f`)),Promise.resolve())
+    if(!academicFoundation)academicFoundation=['model','graph','diagnosis','knowledge','ranks','classifiers','sources','reviews','structured','engine','pending','library','inspector','explorer','rescue']
+      .reduce((promise,name)=>promise.then(()=>window.NexoLoader.script(`./academic/${name}.js?v=528c3a29`)),Promise.resolve())
       .then(()=>{if(!mascotAcademicSubscribed){window.NexoAcademicEngine.subscribe(event=>
         window.NexoMascotController.react(event,app));mascotAcademicSubscribed=true;}})
       .catch(error=>{academicFoundation=null;throw error;});
@@ -942,6 +958,28 @@
     app.innerHTML='<section class="page"><p role="status">Abriendo Biblioteca…</p></section>';
     loadAcademicFoundation().then(()=>{const route=parseRoute();if(route[0]==='library'||route.join('/')==='learn/library')renderRoute(false);})
       .catch(()=>{app.innerHTML='<section class="page"><h1>Biblioteca no disponible</h1><button data-route="library">Reintentar</button></section>';});
+  }
+  /* Estación de clase (docs/clases-v2/SPEC.md): Adivina → Clase → Práctica → Demuestra. El punto de Demuestra entra a la evidencia de la clase. */
+  function renderStation(id, missionId) {
+    const cls = window.NexoClasses?.[id], failed = () => { app.innerHTML = '<section class="page"><div class="panel error-boundary"><h1>No se pudo abrir la estación</h1><button class="primary-btn" data-route="home">Volver al inicio</button></div></section>'; };
+    if (!cls?.stations?.includes(missionId)) {
+      app.innerHTML = '<section class="page"><p role="status">Abriendo la estación…</p></section>';
+      loadClassroom(id).then(() => { if (window.NexoClasses?.[id]?.stations?.includes(missionId) && parseRoute()[0] === 'station') renderRoute(false); else failed(); }).catch(failed);
+      return;
+    }
+    if (!window.NexoStation) {
+      app.innerHTML = '<section class="page"><p role="status">Abriendo la estación…</p></section>';
+      Promise.all([window.NexoLoader.style('./classes/estacion.css'), window.NexoLoader.script('./mascot/pixelmascotas.js'), window.NexoLoader.script('./classes/estacion-art.js')])
+        .then(() => window.NexoLoader.script('./classes/estacion.js')).then(() => { if (parseRoute()[0] === 'station') renderRoute(false); }).catch(failed);
+      return;
+    }
+    app.innerHTML = '<section class="page station-page"><div id="stationHost"></div></section>';
+    window.NexoStation.mount(app.querySelector('#stationHost'), { cls, mission: missionId, pet: state.mascot, fullscreen: true, onExit: () => { location.hash = `#/lesson/${id}`; }, onResult: result => {
+      const E = window.NexoClassEvidence; if (!E) return;
+      const rec = E.record(state, id, { itemId: result.itemId, conceptId: 'am.orden', missionId, stage: 'transfer', step: 5, correct: result.correct, hint: false, retry: false, transfer: true, at: result.at });
+      saveState({ backup: false });
+      E.schedule(state, id, rec).then(() => saveState({ backup: false })).catch(() => {});
+    } });
   }
   function renderAcademicRescue(conceptId) {
     if(window.NexoAcademicRescue)return window.NexoAcademicRescue.render(app,
@@ -959,6 +997,16 @@
         .reduce((promise,src)=>promise.then(()=>window.NexoLoader.script(src)),Promise.resolve()))
       .then(()=>{if(parseRoute()[0]==='study')renderRoute(false);})
       .catch(()=>{app.innerHTML='<section class="page"><h1>Motor de estudio no disponible</h1><button data-route="study">Reintentar</button></section>';});
+  }
+  function renderDuel() {
+    const context={getState:()=>state,saveState,showToast,loadClass:loadClassroom,loadAcademic:loadAcademicFoundation};
+    if(window.NexoDuelUI)return window.NexoDuelUI.render(app,context);
+    app.innerHTML='<section class="page"><p role="status">Buscando un bicho…</p></section>';
+    loadAcademicFoundation()
+      .then(()=>['./game/duel.js','./game/director.js','./game/encounter.js','./game/duel-music.js','./game/duel-ui.js']
+        .reduce((promise,src)=>promise.then(()=>window.NexoLoader.script(src)),Promise.resolve()))
+      .then(()=>{if(parseRoute()[0]==='duelo')renderRoute(false);})
+      .catch(()=>{app.innerHTML='<section class="page"><h1>Duelo no disponible</h1><button data-route="duelo">Reintentar</button></section>';});
   }
   function renderAcademicExplorer(view,conceptId) {
     if(window.NexoAcademicExplorer) {
@@ -997,13 +1045,13 @@
     const promise = Promise.resolve(window.NexoClassCatalog || window.NexoLoader.script('./classes/catalog.js?v=8dec702d')).then(() => {
       const file = window.NexoClassCatalog?.[id];
       if (!file) return false;
-      return Promise.all([window.NexoLoader.style('./classes/classroom.css?v=7f1c7bf7'), window.NexoLoader.script('./classes/tower-art.js?v=9099c2df').then(() => window.NexoLoader.script('./classes/player.js?v=5e381d35')),
+      return Promise.all([window.NexoLoader.script('./classes/player.js?v=d54f576f'),
         window.NexoLoader.script('./classes/willow-tower.js?v=09c21b87').catch(() => null), // Torre del Sauce (etapa 10); sin ella, quedan las hojas en lista
-        window.NexoLoader.script(`./classes/${file}?v=18`),
+        window.NexoLoader.script(`./classes/${file}?v=19`),
         // Motor de evidencia y repaso espaciado (FSRS); si no cargan, la clase funciona igual sin agendar repasos.
-        window.NexoLoader.script('./classes/evidence.js?v=308f7a40'), window.NexoLoader.script('./classes/molecule.js?v=b3b2e5aa'), window.NexoLoader.script('./classes/editor.js?v=df0be94e'), window.NexoLoader.script('./academic/class-bridge.js?v=a668cb26').catch(() => null), window.NexoLoader.script('./academic/reviews.js?v=0273ea6c').catch(() => null)])
+        window.NexoLoader.script('./classes/evidence.js?v=308f7a40'), window.NexoLoader.script('./classes/molecule.js?v=b3b2e5aa'), window.NexoLoader.script('./classes/editor.js?v=df0be94e'), window.NexoLoader.script('./academic/class-bridge.js?v=34abe0b8').catch(() => null), window.NexoLoader.script('./academic/reviews.js?v=0273ea6c').catch(() => null)])
         .then(() => Promise.all([window.NexoLoader.script(`./classes/slides/${id}.js?v=268941af`).catch(() => null), // diapositivas reales, si ya se convirtieron
-          window.NexoLoader.script(`./classes/${id}-gen.js?v=00c1b5a9`).catch(() => null)])) // generadores de ejercicios (etapa 8), si la clase los tiene
+          window.NexoLoader.script(`./classes/${id}-gen.js?v=33f747c1`).catch(() => null)])) // generadores de ejercicios (etapa 8), si la clase los tiene
         .then(() => true);
     });
     promise.catch(() => classroomLoads.delete(id));
@@ -1015,11 +1063,6 @@
     const source = LESSONS[id];
     if (!source) return routeTo('subjects');
     const subject = subjectFor(source.subject);
-    if (window.NexoClassroom && window.NexoClasses?.[id]) {
-      return window.NexoClassroom.render(id, { app, getState: () => state, saveState: () => saveState({ backup: false }),
-        avatarMarkup, hydrate: () => {}, // sin avatares (se borraron en la Fase 0 de la mascota) track: (...args) => cloud.track(...args),
-        subject: { id: subject.id, name: subject.name, color: subject.color }, exit: () => { if (lessonReturnHash) location.hash = lessonReturnHash; else routeTo('learn', 'course', subject.id); } });
-    }
     if (!classroomLoads.has(id)) {
       app.innerHTML = '<section class="page"><div class="app-loader" role="status"><span></span><p>Abriendo el aula…</p></div></section>';
       const onLessonRoute = () => { const route = parseRoute(); return route.join('/') === `lesson/${id}` ||
@@ -1030,7 +1073,7 @@
     }
     app.innerHTML = `<section class="page lesson-soon" style="--course:${subject.color}">
       <button class="back-btn" data-open-subject="${subject.id}">← Ruta de ${subject.name}</button>
-      <div class="panel lesson-soon-card"><p class="eyebrow">${esc(subject.short)} · CLASE</p><h1>${esc(source.title)}</h1><p><b>Disponible próximamente</b></p><p>Estamos rehaciendo esta clase desde cero para que enseñe de verdad. Vuelve pronto.</p><div class="button-row"><button class="primary-btn" data-open-subject="${subject.id}">Volver a ${subject.name}</button><button class="secondary-btn" data-route="home">Ir al refugio</button></div></div>
+      <div class="panel lesson-soon-card"><p class="eyebrow">${esc(subject.short)} · CLASE</p><h1>${esc(source.title)}</h1><p><b>Disponible próximamente</b></p><p>Estamos rehaciendo el aula dentro de la Cámara del ramo. Vuelve pronto.</p><div class="button-row">${(window.NexoClasses?.[id]?.stations || []).map(sid => `<a class="primary-btn" href="#/station/${id}/${sid}">Probar la estación nueva</a>`).join('')}<button class="${window.NexoClasses?.[id]?.stations?.length ? 'secondary-btn' : 'primary-btn'}" data-open-subject="${subject.id}">Volver a ${subject.name}</button><button class="secondary-btn" data-route="home">Ir al refugio</button></div></div>
     </section>`;
   }
 
